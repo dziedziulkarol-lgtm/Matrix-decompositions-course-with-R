@@ -1,0 +1,71 @@
+\documentclass[10pt,a4paper]{article}
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage{amsmath, amssymb, amsthm}
+\usepackage{geometry}
+\geometry{margin=2.5cm}
+
+\title{Wprowadzenie do rozkładów macierzowych}
+\author{Notatki z wykładu}
+\date{}
+
+\begin{document}
+\maketitle
+
+\section*{Cel wykładu}
+Celem kursu jest zrozumienie metod rozkładu macierzy, które pozwalają 
+odkrywać ukrytą strukturę danych. 
+Będziemy rozważać zarówno teorię, jak i zastosowania praktyczne, 
+takie jak kompresja obrazów, analiza danych czy rekomendacje w systemach informatycznych.
+
+\section*{Dlaczego rozkłady macierzowe?}
+Każda macierz może być traktowana jako mapa powiązań:
+\begin{itemize}
+    \item W statystyce macierz opisuje relacje między obiektami a ich cechami.
+    \item W informatyce obraz cyfrowy to macierz pikseli.
+    \item W analizie języka naturalnego duże macierze opisują zależności 
+    między słowami a dokumentami.
+\end{itemize}
+Rozkłady macierzowe umożliwiają odkrycie ukrytej struktury, 
+redukcję wymiaru i interpretację najważniejszych kierunków w danych.
+
+\section*{Przykłady motywujące}
+\begin{enumerate}
+    \item \textbf{Tabela wyników studentów:} 
+    wiersze odpowiadają studentom, kolumny przedmiotom. 
+    Rozkład macierzy ujawnia podobieństwa między studentami i przedmiotami.
+    
+    \item \textbf{Obraz cyfrowy:} 
+    macierz pikseli można przybliżyć prostszą strukturą, 
+    co prowadzi do kompresji danych przy zachowaniu jakości obrazu.
+    
+    \item \textbf{Wyszukiwarki internetowe:} 
+    macierze opisujące związki między zapytaniami i dokumentami 
+    można rozłożyć, aby znaleźć najważniejsze informacje i szybciej odpowiadać na pytania użytkowników.
+\end{enumerate}
+
+\section*{Rozkłady, które poznamy}
+\begin{itemize}
+    \item \textbf{SVD} (Singular Value Decomposition) -- podstawowy rozkład, 
+    który przedstawia macierz w postaci trzech czynników, 
+    pozwalając na redukcję wymiaru i analizę głównych kierunków.
+    
+    \item \textbf{CUR decomposition} -- rozkład, w którym przybliżenie macierzy 
+    opiera się na rzeczywistych kolumnach i wierszach, 
+    co daje przewagę interpretacyjną.
+\end{itemize}
+
+\section*{Plan kursu}
+Kurs będzie składał się z części teoretycznej i praktycznej:
+\begin{enumerate}
+    \item Powtórka z algebry liniowej: normy, iloczyny skalarne, 
+    macierze ortogonalne.
+    \item Definicja i własności rozkładu SVD.
+    \item Zastosowania SVD: kompresja, PCA, redukcja wymiaru.
+    \item CUR decomposition i porównanie z SVD.
+    \item Zadania i projekty z rzeczywistymi danymi.
+\end{enumerate}
+
+\end{document}

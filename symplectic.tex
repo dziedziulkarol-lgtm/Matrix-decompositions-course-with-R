@@ -1,0 +1,317 @@
+\documentclass[12pt]{article}
+
+% --- Preambuła ---
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+%\usepackage[polish]{babel}
+\usepackage{lmodern}
+\usepackage{geometry}
+\geometry{margin=1in}
+\usepackage{amsmath}
+\let\lll\undefined % zapobiega konfliktowi z polskim pakietem
+\usepackage{amssymb}
+\usepackage{mathtools}
+\usepackage{bm}
+\usepackage{enumitem}
+\usepackage{xcolor}
+\usepackage{hyperref}
+\hypersetup{colorlinks=true, linkcolor=blue, urlcolor=blue, citecolor=teal}
+\usepackage{amsthm}
+\usepackage{physics}
+\usepackage{booktabs}
+\usepackage{listings}
+\usepackage{caption}
+
+% --- Ustawienia listings (R) ---
+\lstdefinestyle{Rstyle}{
+  language=R,
+  basicstyle=\ttfamily\small,
+  keywordstyle=\color{blue}\bfseries,
+  commentstyle=\color{gray!70}\itshape,
+  stringstyle=\color{purple!70!black},
+  numbers=left, numberstyle=\tiny, numbersep=8pt,
+  showstringspaces=false,
+  frame=single, rulecolor=\color{gray!50},
+  breaklines=true, tabsize=2, columns=fullflexible,
+  literate={ą}{{\k{a}}}1 {ć}{{\'c}}1 {ę}{{\k{e}}}1 {ł}{{\l{}}}1
+           {ń}{{\'n}}1 {ó}{{\'o}}1 {ś}{{\'s}}1 {ż}{{\.z}}1 {ź}{{\'z}}1
+           {Ą}{{\k{A}}}1 {Ć}{{\'C}}1 {Ę}{{\k{E}}}1 {Ł}{{\L{}}}1
+           {Ń}{{\'N}}1 {Ó}{{\'O}}1 {Ś}{{\'S}}1 {Ż}{{\.Z}}1 {Ź}{{\'Z}}1,
+}
+\lstset{style=Rstyle}
+
+% --- Środowiska twierdzeń ---
+\newtheorem{defi}{Definicja}
+\newtheorem{prop}{Własność}
+\newtheorem{ex}{Przykład}
+\newtheorem{exer}{Zadanie}
+
+% --- Skróty ---
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\Sp}{\mathrm{Sp}}
+\newcommand{\Id}{\mathrm{Id}}
+
+\title{Dlaczego macierze symplektyczne są ważne?\\ \large Krótka lekcja z zadaniami i ćwiczeniem w R}
+\author{Kurs: Rozkłady macierzowe i zastosowania}
+\date{}
+
+\begin{document}
+\maketitle
+
+\section*{Cel lekcji}
+Zrozumieć, czym jest forma symplektyczna, macierz symplektyczna i dlaczego transformata Fouriera może być postrzegana jako rotacja w przestrzeni fazowej. Zobaczyć na eksperymencie numerycznym (R), że \emph{symplectic Euler} zachowuje energię znacznie lepiej niż zwykły Euler w układach Hamiltonowskich (oscylator harmoniczny).
+
+\section{Geometria symplektyczna w skrócie}
+\begin{defi}[Przestrzeń symplektyczna]
+Liniowa przestrzeń symplektyczna to para $(V,\omega)$, gdzie $V$ jest przestrzenią wektorową nad $\R$ wymiaru $2n$, zaś $\omega:V\times V\to\R$ jest antysymetryczna, czyli dla każdego $v,w\in V$, $\omega(v,u)=-\omega(u,v)$ i niezdegenerowana, czyli jeśli dla każdego $v\in V$, $\omega(v,u)=0$ to $u=0$.. W bazie kanonicznej
+\[
+\omega(u,v) = u^\top J v,\qquad 
+J=\begin{bmatrix}0&I_n\\ -I_n&0\end{bmatrix}.
+\]
+\end{defi}
+ Zwykle podaje się w definicji następujące warunki. 
+\begin{defi} Definicja
+ $\omega:V\times V\to\R$ jest dwuliniowa, alternująca czyli dla każdego $v\in V$, $\omega(v,v)=0$ oraz  niezdegenerowana
+ \end{defi}
+Pokazać, że antysymetryczność jest równoważna z własnością alternacji. Uwaga. Korzystamy tutaj, że pracujemy nad ciałem $R$. 
+ 
+\begin{defi}[Rozmaitość symplektyczna]
+Rozmaitość symplektyczna to para $(M,\omega)$, gdzie $M$ jest gładką rozmaitością wymiaru $2n$, a $\omega$ jest gładką, niezdegenerowaną i zamkniętą ($d\omega=0$) 2-formą. Na przestrzeni fazowej $T^*Q$ mamy kanoniczną 1-formę Liouville’a $\theta=\sum_i p_i\,dq_i$ oraz kanoniczną formę symplektyczną $\omega=d\theta=\sum_i dq_i\wedge dp_i$.
+\end{defi}
+
+\section{Macierze symplektyczne}
+\begin{defi}
+Macierz $A\in\R^{2n\times 2n}$ jest \emph{symplektyczna}, jeśli
+\[
+A^\top J A = J,\qquad 
+J=\begin{bmatrix}0&I_n\\ -I_n&0\end{bmatrix}.
+\]
+Zbiór takich macierzy tworzy grupę $\Sp(2n,\R)$.
+\end{defi}
+
+\begin{prop}[Własności]
+Jeśli $A\in\Sp(2n,\R)$, to:
+\begin{enumerate}[label=(\alph*)]
+    \item $A$ jest odwracalna, $A^{-1}=J^{-1}A^\top J = -J A^\top J$,
+    \item $\det A=1$ (zachowanie objętości Liouvilla),
+    \item widmo spełnia: jeśli $\lambda$ jest wartością własną, to również $\overline{\lambda}$ i $1/\lambda$.
+\end{enumerate}
+\end{prop}
+
+\begin{ex}[Rotacja fazowa]
+W przypadku $n=1$ macierz
+\[
+R=\begin{bmatrix}0&1\\ -1&0\end{bmatrix}
+\]
+spełnia $R^\top J R=J$ oraz działa na współrzędne $(q,p)$ jak $(q,p)\mapsto (p,-q)$, co jest rotacją o $90^\circ$ w płaszczyźnie fazowej.
+\end{ex}
+
+\section{Wiązka kostyczna i przekształcenia kanoniczne}
+Niech $(\R^{2n},\omega)$ będzie standardową przestrzenią symplektyczną z
+\[
+\omega=\sum_{i=1}^n dq_i\wedge dp_i.
+\]
+Przekształcenie $\Phi:\R^{2n}\to\R^{2n}$ nazywamy \emph{kanonicznym} (symplektycznym), jeśli $\Phi^*\omega=\omega$.
+
+Dla
+\[
+\Phi(q,p)=(p,-q)
+\]
+mamy $dq'_i=dp_i$ oraz $dp'_i=-dq_i$, zatem
+\[
+\Phi^*\omega = \sum_{i=1}^n dq'_i\wedge dp'_i
+= \sum_{i=1}^n dp_i\wedge(-dq_i)
+= \sum_{i=1}^n dq_i\wedge dp_i
+= \omega,
+\]
+czyli $\Phi$ jest przekształceniem kanonicznym.
+
+\section{Zadania rachunkowe}
+\begin{exer}[Sprawdzenie symplektyczności]
+Dla $n=1$ i
+\[
+A_\alpha=\begin{bmatrix}\cos\alpha&\sin\alpha\\ -\sin\alpha&\cos\alpha\end{bmatrix}
+\]
+pokaż, że $A_\alpha^\top J A_\alpha = J$ dla każdego $\alpha\in\R$. Wniosek?
+\end{exer}
+
+\begin{exer}[Warunek blokowy]
+Niech 
+\[
+A=\begin{bmatrix} a& b\\ c& d\end{bmatrix},\quad a,b,c,d\in\R^{n\times n}.
+\]
+Wyprowadź równania równoważne $A^\top J A=J$, tzn.
+\[
+a^\top c=c^\top a,\quad b^\top d=d^\top b,\quad a^\top d-c^\top b=I_n.
+\]
+\end{exer}
+
+\begin{exer}[Objętość Liouvilla]
+Pokaż, że $A^\top J A=J$ implikuje $\det A=1$. (Wsk.: weź wyznacznik po obu stronach.)
+\end{exer}
+
+\begin{exer}[„Dlaczego to ma znaczenie?”]
+Rozważ układ Hamiltona $H(q,p)=\tfrac12(p^2+\omega^2 q^2)$. Napisz równania Hamiltona i pokaż, że przepływ jest rotacją w płaszczyźnie $(q,p)$ z prędkością kątową $\omega$.
+\end{exer}
+
+\section{Ćwiczenie komputerowe w R: Euler vs. \emph{Symplectic Euler}}
+\subsection*{Cel}
+Porównać zachowanie energii numerycznej dla oscylatora $H(q,p)=\tfrac12(p^2+q^2)$:
+\[
+\dot q = \frac{\partial H}{\partial p}=p,\qquad 
+\dot p = -\frac{\partial H}{\partial q}=-q.
+\]
+Zobaczymy, że metoda Eulera „ucieka” z energią, a \emph{symplectic Euler} zachowuje energię w długim czasie znacznie lepiej.
+
+\subsection*{Kod R (uruchom w R/RStudio)}
+\begin{lstlisting}
+# --- Parametry ---
+Tmax <- 200
+h    <- 0.05
+N    <- ceiling(Tmax/h)
+
+# --- Warunki początkowe ---
+q0 <- 1
+p0 <- 0
+
+# --- Pomocnicze: energia ---
+H <- function(q, p) 0.5*(q^2 + p^2)
+
+# --- 1) Zwykły Euler jawny ---
+q_e <- numeric(N+1); p_e <- numeric(N+1); E_e <- numeric(N+1)
+q_e[1] <- q0; p_e[1] <- p0; E_e[1] <- H(q_e[1], p_e[1])
+
+for (k in 1:N) {
+  q_e[k+1] <- q_e[k] + h * p_e[k]
+  p_e[k+1] <- p_e[k] - h * q_e[k]
+  E_e[k+1] <- H(q_e[k+1], p_e[k+1])
+}
+
+# --- 2) Symplectic Euler (wersja "p-then-q") ---
+q_s <- numeric(N+1); p_s <- numeric(N+1); E_s <- numeric(N+1)
+q_s[1] <- q0; p_s[1] <- p0; E_s[1] <- H(q_s[1], p_s[1])
+
+for (k in 1:N) {
+  # najpierw aktualizuj p używając q z chwili k
+  p_s[k+1] <- p_s[k] - h * q_s[k]
+  # potem q używając p z chwili k+1
+  q_s[k+1] <- q_s[k] + h * p_s[k+1]
+  E_s[k+1] <- H(q_s[k+1], p_s[k+1])
+}
+
+# --- Wykresy (energia w czasie) ---
+op <- par(mfrow=c(1,2))
+plot(seq(0, N)*h, E_e, type="l", xlab="t", ylab="Energia", main="Euler jawny: energia")
+plot(seq(0, N)*h, E_s, type="l", xlab="t", ylab="Energia", main="Symplectic Euler: energia")
+par(op)
+
+# --- Tor w przestrzeni fazowej ---
+op <- par(mfrow=c(1,2), asp=1)
+plot(q_e, p_e, type="l", xlab="q", ylab="p", main="Euler jawny: tor (q,p)")
+plot(q_s, p_s, type="l", xlab="q", ylab="p", main="Symplectic Euler: tor (q,p)")
+par(op)
+
+# --- Bonus: szybki test "symplektyczności" macierzy 2x2 ---
+is_symplectic_2x2 <- function(A) {
+  J <- matrix(c(0,1,-1,0), 2, 2)
+  all(abs(t(A) %*% J %*% A - J) < 1e-10)
+}
+
+R90 <- matrix(c(0,1,-1,0), 2, 2)
+is_symplectic_2x2(R90)  # powinno być TRUE
+
+# Przykład rotacji o kąt alpha:
+alpha <- 0.37
+A <- matrix(c(cos(alpha), sin(alpha), -sin(alpha), cos(alpha)), 2, 2)
+is_symplectic_2x2(A)    # TRUE
+\end{lstlisting}
+
+\paragraph{Komentarz: Euler zwykły a Euler symplektyczny.}
+
+Rozważany układ Hamiltona
+\[
+H(q,p)=\tfrac{1}{2}(q^2+p^2), \qquad 
+\dot q = p, \quad \dot p = -q
+\]
+ma rozwiązania dokładne poruszające się po okręgu w płaszczyźnie $(q,p)$, a energia
+\[
+E(t) = \tfrac{1}{2}\big(q(t)^2+p(t)^2\big)
+\]
+jest zachowana.
+
+\begin{itemize}
+\item \textbf{Euler jawny} (klasyczny schemat Eulera):
+\[
+q_{k+1} = q_k + h p_k, \qquad 
+p_{k+1} = p_k - h q_k,
+\]
+nie respektuje struktury Hamiltonowskiej. W krótkim czasie energia może chwilowo maleć lub rosnąć w zależności od warunków początkowych, 
+ale w dłuższym okresie zawsze \emph{rośnie wykładniczo}, a tor numeryczny spiralnie oddala się od okręgu.
+
+\item \textbf{Euler symplektyczny} (tzw. \emph{symplectic Euler}):
+
+Schemat \textbf{Eulera symplektycznego} (wariant $p$-then-$q$) ma postać
+\[
+\begin{cases}
+p_{k+1} = p_k - h q_k, \\
+q_{k+1} = q_k + h p_{k+1}.
+\end{cases}
+\]
+
+Możemy to zapisać w postaci macierzowej:
+\[
+\begin{bmatrix} q_{k+1} \\ p_{k+1} \end{bmatrix}
+=
+M_{\text{symp}}
+\begin{bmatrix} q_k \\ p_k \end{bmatrix},
+\qquad 
+M_{\text{symp}} = 
+\begin{bmatrix}
+1 & h \\ -h & 1-h^2
+\end{bmatrix}.
+\]
+\end{itemize}
+
+\begin{exer}[Sprawdzenie symplektyczności]
+Przypomnijmy: macierz $M$ jest symplektyczna, jeśli
+\[
+M^\top J M = J, 
+\qquad 
+J=\begin{bmatrix}0 & 1 \\ -1 & 0\end{bmatrix}.
+\]
+Zweryfikuj rachunkowo, że $M_{\text{symp}}$ spełnia ten warunek, a macierz kroku zwykłego Eulera
+\[
+M_{\text{Euler}} = \begin{bmatrix}1 & h \\ -h & 1\end{bmatrix}
+\]
+go nie spełnia.
+\end{exer}
+
+\noindent
+Dlatego metody symplektyczne są preferowane w długoterminowych symulacjach układów Hamiltonowskich (np. w astronomii, dynamice molekularnej): zamiast dokładności „punkt po punkcie” gwarantują poprawne odwzorowanie \emph{geometrii} ruchu i zachowanie własności jakościowych (stabilność, energia w przybliżeniu stała).
+
+\section*{Kącik angielski (terminy kluczowe)}
+\begin{itemize}[label=$\triangleright$]
+\item symplectic form — forma symplektyczna
+\item canonical transformation — przekształcenie kanoniczne
+\item phase space — przestrzeń fazowa
+\item Liouville 1-form / Liouville form — forma Liouville’a
+\item symplectic integrator — całkownik symplektyczny
+\item Fourier transform as phase-space rotation — transformata Fouriera jako rotacja w przestrzeni fazowej
+\end{itemize}
+
+\section*{Literatura (na start)}
+\begin{enumerate}
+\item V.\,I. Arnold, \emph{Mathematical Methods of Classical Mechanics}.
+\item R.\,Abraham, J.\,E. Marsden, \emph{Foundations of Mechanics}.
+\item H. Goldstein, C.\,P. Poole, J.\,L. Safko, \emph{Classical Mechanics} (rozdz. Hamiltonowskie).
+\item E. Hairer, C. Lubich, G. Wanner, \emph{Geometric Numerical Integration}.
+\end{enumerate}
+
+\section*{Mini-quiz (1–2 min)}
+\begin{enumerate}[label=\arabic*.]
+\item Podaj definicję macierzy symplektycznej w postaci $A^\top J A=J$.
+\item Dlaczego $\det A=1$ dla $A\in\Sp(2n,\R)$?
+\item Jak działa na $(q,p)$ macierz $R=\begin{bmatrix}0&1\\ -1&0\end{bmatrix}$?
+\end{enumerate}
+
+\end{document}

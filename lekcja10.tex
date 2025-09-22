@@ -1,0 +1,455 @@
+\documentclass[12pt]{article}
+% --- Preambuła minimalna (bez fajerwerków) ---
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage[polish]{babel}
+\usepackage{amsmath}
+\let\lll\undefined
+\usepackage{amssymb}
+\usepackage{geometry}
+\geometry{margin=1in}
+\usepackage{enumitem}
+\usepackage{xcolor}
+\usepackage{hyperref}
+\usepackage{tabularx}
+\hypersetup{colorlinks=true, linkcolor=blue, urlcolor=blue}
+
+\usepackage{amsthm}
+
+
+\newtheorem{theorem}{Theorem}[section]
+
+% --- Makra drobne, nieszkodliwe ---
+\DeclareMathOperator{\rank}{rank}
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\C}{\mathbb{C}}
+
+\title{Lekcja: Rozkład CUR}
+\author{Kurs: Uczenie się matematyki z ChatGPT}
+\date{\today}
+
+\begin{document}
+\maketitle
+
+
+
+\subsection*{Pseudo-odwrotność i regularyzacja Tikhonova}
+
+\paragraph{Idea ogólna.}
+Pseudo-odwrotność Moore'a--Penrose'a macierzy $M\in\mathbb{R}^{m\times n}$
+można definiować poprzez rozkład SVD. W praktyce często stosuje się
+formuły oparte na równaniach normalnych. Dla macierzy wysokiej ($m>n$)
+otrzymujemy
+\[
+M^{\dagger} = (M^\top M)^{-1}M^\top,
+\]
+natomiast dla macierzy szerokiej ($m<n$)
+\[
+M^{\dagger} = M^\top (MM^\top)^{-1},
+\]
+pod warunkiem, że odpowiednie macierze są odwracalne. 
+Obie postacie są równoważne z definicją przez SVD, ale obliczeniowo prostsze.
+
+\paragraph{Regularyzacja Tikhonova (ridge regularization).}
+Jeśli $M^\top M$ lub $MM^\top$ są źle uwarunkowane,
+klasyczna pseudo-odwrotność staje się numerycznie niestabilna.
+Aby temu zapobiec, stosuje się \emph{regularizację Tikhonova}, polegającą
+na dodaniu niewielkiej stałej $\lambda>0$ do macierzy na diagonali:
+\[
+M^{\dagger}_\lambda = (M^\top M + \lambda I)^{-1}M^\top
+\quad\text{dla $m\ge n$,}
+\]
+\[
+M^{\dagger}_\lambda = M^\top(MM^\top + \lambda I)^{-1}
+\quad\text{dla $m< n$.}
+\]
+Dzięki temu wszystkie wartości własne są odsunięte od zera o $\lambda$,
+co poprawia uwarunkowanie macierzy i stabilizuje obliczenia.
+Analogiczna technika jest stosowana w regresji grzbietowej
+(\emph{ridge regression}).
+
+\subsection*{Literatura}
+Strang page 120-125
+
+
+\subsection*{Przykład: stabilizacja pseudo-odwrotności Tichonowem}
+
+Rozważmy macierz
+\[
+M=\begin{pmatrix}
+1 & 1\\[2pt]
+1 & 1+\delta
+\end{pmatrix},\qquad 0<\delta\ll 1,
+\]
+która dla małego $\delta$ jest bliska osobliwej (kolumny niemal liniowo zależne).
+Niech szukamy $x$ rozwiązując problem najmniejszych kwadratów dla danego $b$:
+\[
+\min_x \|Mx-b\|_2^2.
+\]
+Równania normalne dają $x=(M^\top M)^{-1}M^\top b$, ale $M^\top M$ jest źle
+uwarunkowana. Wersja \emph{z regularyzacją Tichonowa} rozwiązuje
+\[
+\min_x \bigl(\|Mx-b\|_2^2+\lambda\|x\|_2^2\bigr)
+\quad\Longrightarrow\quad
+x_\lambda=(M^\top M+\lambda I)^{-1}M^\top b,
+\]
+co odpowiada \emph{regulararyzowanej pseudo-odwrotności}
+\[
+M_\lambda^{\dagger}=(M^\top M+\lambda I)^{-1}M^\top.
+\]
+
+\paragraph{Obliczenia.}
+Mamy
+\[
+M^\top M=\begin{pmatrix}
+2 & 2+\delta\\[2pt]
+2+\delta & 2+2\delta+\delta^2
+\end{pmatrix}.
+\]
+Wartości własne $M^\top M$ to $\sigma_1^2\gg\sigma_2^2\approx \tfrac{\delta^2}{2}$,
+więc $\kappa(M^\top M)=\sigma_1^2/\sigma_2^2\sim \delta^{-2}$ rośnie
+gwałtownie, gdy $\delta\to 0$. Dodanie $\lambda I$ przesuwa spektrum:
+\[
+\lambda_i(M^\top M+\lambda I)=\sigma_i^2+\lambda,
+\]
+dzięki czemu odwracanie staje się stabilne, a
+\[
+\| (M^\top M+\lambda I)^{-1} \|_2=\frac{1}{\sigma_{\min}^2+\lambda}
+\]
+nie „wybucha” przy małych $\delta$. Dla konkretnego $b$ (np.\ $b=(1,0)^\top$)
+otrzymujemy
+\[
+x_\lambda=(M^\top M+\lambda I)^{-1}\!\begin{pmatrix}1\\[2pt]1\end{pmatrix},
+\]
+które gładko zależy od $\lambda$ i pozostaje stabilne numerycznie nawet dla
+$\delta\approx 10^{-6}$.
+
+
+\section{Rozkład CUR}
+Niech $A\in\R^{m\times n}$ lub $A\in\C^{m\times n}$, $A=[a_{i,j}]$. Wybieramy indeksy kolumn $J\subset \{1,\ldots,n\}$ i wierszy $I\subset \{1,\ldots,m\}$. 
+Niech $|I|=t$ zaś $|J|=s$.
+Definiujemy
+$C=A_{:,J}$, $R=A_{I,:}$, $U=A_{I,J}$,
+gdzie podmacierz $C$ składa się wyłącznie z kolumn macierzy $A$ o indeksach ze zbioru $J$. Podobnie macierz $R$ składa się wyłącznie z wierszy (ang. row) macierzy $A$ o indeksach ze zbioru $I$. Macierz U jest 'przecięciem' macierzy $C$ i $R$, czyli
+\[
+U=A(I,J)=[a_{i,j}]_{i\in I, j\in J}.
+\]
+Wówczas
+\begin{theorem}
+Jeśli $rank A=rankU$, to
+\[
+A=C U^\dagger R,
+\]
+gdzie $U^\dagger$ to macierz pseudoodwrotna.
+\end{theorem}
+\begin{proof} Dowód precyzyjny tylko dla $t=s=rank A$. 
+Z definicji macierzy
+\[
+rank(U)\leq rank (R),rank(C)\leq rank(A).
+\]
+Z założenia $rank A=rankU$ zatem mamy równość co oznacza, że wektory z $C$ rozpinają tę samą podprzestrzeń co wektory z $A$. Oznacza to, że istnieje macierz $X$ wymiaru $s\times n$ taka, że
+\begin{equation}
+\label{two}
+A=CX.
+\end{equation}
+
+Niech macierz $P_I$ bedzie macierzą o wymiarze $t\times l$ taką, że w każdej macierzy $B$ o wymiarze $l\times p$ $P_I$ eliminuje wiersze zostawiając wiersze o indeksach $I$, czyli
+\[
+P_I B=B(I,:).
+\]
+Wówczas oczywiście $P_IA=R$ oraz  $P_IC=U$. Stąd i także z (\ref{two})
+otrzymujemy, że $X$ spełnia równanie
+\begin{equation}
+\label{one}
+R=P_IA=P_ICX=UX.
+\end{equation}
+Równanie to ma rozwiązanie $X^\dagger=U^\dagger R$. Biorąc pod uwagę 
+(\ref{two}) aby udowodnić twierdzenie wystarczy pokazać, że $CX=CX^\dagger$.
+
+W przypadku $t=s=rankA$ zawsze można wybrać $I$ oraz $J$ tak, że $U$ jest odwracalna. Zatem 
+$U^\dagger=U^{-1}$ czyli
+$X=X^\dagger$.
+\end{proof}
+
+
+ Najprostsza aproksymacja ma postać
+$A \approx C\,U^\dagger\,R$ i  $rank A\geq rankU$
+
+\section{Zadania}
+Dla dowolnej macierzy kwadratowej $B$ wymiaru $3\times 3$ znajdź macierz $P_I$ eliminującą drugi wiesz, czyli dla $I=\{1,3\}$
+\[
+P_IB=B(I,:)
+\]
+dla dowolnej macierzy $B$ wymiaru $3\times 4$.
+
+Przeanalizuj dowód twierdzenia. Kiedy równanie (\ref{two}) ma nieskończenie wiele rozwiązań a kiedy jedno rozwiązanie? Czy one wszystkie spełniają (\ref{one})?. Co zatem oznacza (czyli co (spełnia) $X^\dagger=U^\dagger R$?
+
+Dla zadanej macierzy obrazu $A\in\R^{128\times128}$ porównaj rekonstrukcje dla $k\in\{8,16,32,48\}$: SVD, NMF, CUR. Oblicz błąd Frobeniusa $\lVert A-\widehat A\rVert_F/\lVert A\rVert_F$ i oceń wizualnie.
+
+\section{Wariant A (minimalny)}
+\noindent\textbf{Uwaga:} Nie wkładaj tu polskich znaków ani komend typu \verb|\\| do tytułu/\verb|\author|.
+
+\begin{verbatim}
+
+# install.packages("MASS")  # jeśli brak
+
+library(MASS)
+
+
+A <- as.matrix(read.csv("C:/Users/Karol Dziedziul/Dropbox/matrix/lecture5/img_small.csv", header=TRUE))
+stopifnot(nrow(A)==128, ncol(A)==128)
+
+image((apply(A,2,rev)), axes = FALSE, col = gray(seq(0, 1, length = 256)),
+      asp = 1)
+ks<-c(4,8,16,32)
+
+# --- SVD rank-k -
+
+svd_k <- function(M, k){ s <- svd(M); s$u[,1:k] %*% diag(s$d[1:k]) %*% t(s$v[,1:k]) }
+
+par(mfrow = c(1, length(ks)), mar = c(1,1,2,1))
+
+for (k in ks) {
+  A_svd <- svd_k(A, k)
+  image((A_svd[nrow(A_svd):1, ]), axes = FALSE,
+        col = gray.colors(256), asp = 1,
+        main = paste("k =", k))
+}
+
+
+# --- Prosty NMF (tylko dla nieujemnych, opcjonalny) ---
+
+library(NMF)
+
+for (k in ks) {
+fit <- nmf(A, rank=k, method="brunet", nrun=5, seed=123)
+W <- basis(fit)   # macierz W
+H <- coef(fit)    # macierz H
+Ak<- W %*% H
+image((apply(Ak, 2, rev)), col = gray.colors(256), axes = FALSE, asp = 1,
+        main = paste("NMF  k =", k))
+}
+
+
+
+# --- CUR z dźwigniami (deterministycznie top-c/top-r) ---
+
+cur <- function(M, k, c=4*k, r=4*k){
+s <- svd(M); Uk <- s$u[,1:k,drop=FALSE]; Vk <- s$v[,1:k,drop=FALSE]
+J <- order(rowSums(Vk^2), decreasing=TRUE)[1:c]
+I <- order(rowSums(Uk^2), decreasing=TRUE)[1:r]
+C <- M[,J,drop=FALSE]; R <- M[I,,drop=FALSE]; W <- M[I,J,drop=FALSE]
+C %*% ginv(W) %*% R
+}
+
+for (k in ks) {
+A_cur <- cur(A,k)
+image((apply(A_cur, 2, rev)), col = gray.colors(256), axes = FALSE, asp = 1,
+        main = paste("CUR k =", k))
+}
+
+
+\end{verbatim}
+
+
+\section{Pseudo-odwrotność z ewentualną regularyzacją Tikhonova} 
+\begin{verbatim}
+
+library(MASS)
+
+pinv_tikh <- function(M, lambda = 0) {
+  # pseudo-odwrotność z ewentualną regularyzacją Tikhonova
+  # (M^T M + lambda I)^(-1) M^T   — dla szerokich macierzy
+  # fallback do ginv, jeśli lambda = 0 lub kształt inny
+  if (lambda > 0) {
+    if (nrow(M) >= ncol(M)) {
+      solve(t(M) %*% M + lambda * diag(ncol(M)), t(M))
+    } else {
+      t(solve(M %*% t(M) + lambda * diag(nrow(M)), M))
+    }
+  } else {
+    ginv(M)
+  }
+}
+
+cur2 <- function(M, k, c = 6*k, r = 6*k, variant = c("global","intersection"),
+                lambda = 1e-6) {
+  variant <- match.arg(variant)
+  s <- svd(M)
+  Uk <- s$u[, 1:k, drop = FALSE]
+  Vk <- s$v[, 1:k, drop = FALSE]
+
+  # dźwignie (leverage): kolumny ~ wiersze Vk, wiersze ~ wiersze Uk
+  lev_cols <- rowSums(Vk^2)
+  lev_rows <- rowSums(Uk^2)
+
+  J <- order(lev_cols, decreasing = TRUE)[1:c]  # kolumny
+  I <- order(lev_rows, decreasing = TRUE)[1:r]  # wiersze
+
+  C <- M[, J, drop = FALSE]
+  R <- M[I, , drop = FALSE]
+  W <- M[I, J, drop = FALSE]
+
+  if (variant == "global") {
+    U <- pinv_tikh(C, lambda) %*% M %*% pinv_tikh(R, lambda)
+  } else {
+    U <- pinv_tikh(W, lambda)
+  }
+  C %*% U %*% R
+}
+
+for (k in ks) {
+A_cur <- cur2(A,k)
+image((apply(A_cur, 2, rev)), col = gray.colors(256), axes = FALSE, asp = 1,
+        main = paste("CUR k =", k))}
+
+\end{verbatim}
+
+\section{wariant B (rozszerzony)}
+
+
+\begin{table}[h]
+\centering
+\renewcommand{\arraystretch}{1.3}
+\begin{tabularx}{\textwidth}{|c|X|X|X|}
+\hline
+ & \textbf{SVD} & \textbf{NMF} & \textbf{CUR} \\
+\hline
+\textbf{Koszt obliczeń} 
+& $O(mn\min(m,n))$ dla pełnego SVD; drogo dla dużych macierzy 
+& iteracyjny (dziesiątki--setki kroków); każda iteracja $\sim O(mnk)$ 
+& wybór $c,r$ kolumn/wierszy + małe pseudoodwrotności; $\sim O(mc^2+nr^2)$ \\
+\hline
+\textbf{Własności} 
+& optymalne przybliżenie rzędu-$k$ w normie Frobeniusa (Twierdzenie Eckarta--Younga) 
+& zachowuje nieujemność ($W,H\ge 0$); interpretacja „części składowych” 
+& zachowuje faktyczne kolumny i wiersze macierzy; przybliżenie interpretowalne \\
+\hline
+\textbf{Jakość rekonstrukcji} 
+& bardzo wysoka, „gładka” aproksymacja 
+& zwykle gorsza niż SVD, ale z sensowną interpretacją 
+& dobra przy dużych $c,r$, ale „blokowa”; słaba przy zbyt małym $c,r$ \\
+\hline
+\textbf{Zastosowania} 
+& kompresja, PCA, analiza danych, obrazowanie 
+& analiza danych zliczeniowych, tematy w tekstach, bioinformatyka 
+& szybka aproksymacja, eksploracja kolumn/wierszy, duże dane \\
+\hline
+\end{tabularx}
+\caption{Porównanie metod SVD, NMF i CUR (koszt, własności, zastosowania).}
+\end{table}
+
+\noindent\textbf{Komentarz dydaktyczny.} 
+SVD daje najlepsze aproksymacje rzędu-$k$, ale jest obliczeniowo najdroższe. 
+NMF zwykle nie dorównuje dokładnością SVD, lecz ma przewagę interpretowalności: 
+składniki $W,H$ można rozumieć jako „części składowe” danych. 
+CUR jest najszybsze, ponieważ operuje tylko na wybranych kolumnach i wierszach, 
+dzięki czemu łatwo skalować je do dużych macierzy, kosztem jakości przy zbyt małej liczbie próbek.
+
+
+
+\begin{verbatim}
+
+library(MASS)
+library(NMF)
+
+# --- Wczytanie i pomocnicze ---
+A <- as.matrix(read.csv("C:/Users/Karol Dziedziul/Dropbox/matrix/lecture5/img_small.csv", header=TRUE))
+stopifnot(nrow(A) == 128, ncol(A) == 128)
+
+orient <- function(M) {
+  stopifnot(is.matrix(M))
+  M[nrow(M):1, , drop = FALSE]
+}
+
+clip01 <- function(X) {
+  stopifnot(is.matrix(X))
+  Xc <- pmax(0, pmin(1, X))   # pmin/pmax zwracają wektor
+  dim(Xc) <- dim(X)           # PRZYWRACAMY wymiary oryginału
+  Xc
+}
+
+
+frob <- function(X, Y) sqrt(sum((X - Y)^2))           # ||X - Y||_F
+
+ks <- c(4, 8, 16, 32)
+
+# --- SVD rank-k ---
+svd_k <- function(M, k){
+  s <- svd(M)
+  s$u[, 1:k, drop=FALSE] %*% diag(s$d[1:k], nrow=k) %*% t(s$v[, 1:k, drop=FALSE])
+}
+
+# --- NMF (KL lub Frobenius – tu KL/Brunet) ---
+nmf_recon <- function(M, k, method="brunet", nrun=5, seed=123){
+  set.seed(seed)
+  fit <- nmf(M, rank=k, method=method, nrun=nrun, seed=seed)
+  basis(fit) %*% coef(fit)
+}
+
+# --- Pseudo-odwrotność z regularyzacją Tikhonova ---
+pinv_tikh <- function(M, lambda = 0){
+  if (lambda > 0){
+    if (nrow(M) >= ncol(M)){                       # "wysoka"
+      solve(t(M) %*% M + lambda * diag(ncol(M)), t(M))
+    } else {                                       # "szeroka"
+      t(solve(M %*% t(M) + lambda * diag(nrow(M)), M))
+    }
+  } else {
+    ginv(M)
+  }
+}
+
+# --- CUR z dźwigniami (deterministyczny top-c/top-r) + stabilniejsze U ---
+cur <- function(M, k, c = 4*k, r = 4*k, lambda = 1e-6, variant = c("global","intersection")){
+  variant <- match.arg(variant)
+  s  <- svd(M)
+  Uk <- s$u[, 1:k, drop=FALSE]
+  Vk <- s$v[, 1:k, drop=FALSE]
+
+  lev_cols <- rowSums(Vk^2)
+  lev_rows <- rowSums(Uk^2)
+
+  J <- order(lev_cols, decreasing=TRUE)[1:c]
+  I <- order(lev_rows, decreasing=TRUE)[1:r]
+
+  C <- M[, J, drop=FALSE]
+  R <- M[I, , drop=FALSE]
+  W <- M[I, J, drop=FALSE]
+
+  if (variant == "global"){
+    U <- pinv_tikh(C, lambda) %*% M %*% pinv_tikh(R, lambda)
+  } else {
+    U <- pinv_tikh(W, lambda)
+  }
+  C %*% U %*% R
+}
+
+# --- Podgląd oryginału ---
+par(mfrow = c(1,1), mar = c(1,1,2,1))
+image(orient(A), axes=FALSE, col=gray.colors(256), asp=1, main="Oryginał")
+
+# --- Porównanie SVD / NMF / CUR dla różnych k ---
+par(mfrow = c(3, length(ks)), mar = c(1,1,2,1))
+for(k in ks){
+  A_svd <- svd_k(A, k)
+  image(orient(clip01(A_svd)), axes=FALSE, col=gray.colors(256), asp=1,
+        main = sprintf("SVD k=%d\n||·||F=%.3f", k, frob(A, A_svd)))
+}
+for(k in ks){
+  A_nmf <- nmf_recon(A, k, method="brunet", nrun=5, seed=123)
+  image(orient(clip01(A_nmf)), axes=FALSE, col=gray.colors(256), asp=1,
+        main = sprintf("NMF(brunet) k=%d\n||·||F=%.3f", k, frob(A, A_nmf)))
+}
+for(k in ks){
+  A_cur <- cur(A, k, c=4*k, r=4*k, lambda=1e-6, variant="global")
+  image(orient(clip01(A_cur)), axes=FALSE, col=gray.colors(256), asp=1,
+        main = sprintf("CUR k=%d\n||·||F=%.3f", k, frob(A, A_cur)))
+}
+
+
+\end{verbatim}
+
+
+\end{document}

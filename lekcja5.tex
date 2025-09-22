@@ -1,0 +1,200 @@
+\documentclass[12pt]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage{geometry}
+\geometry{margin=1in}
+\usepackage{amsmath,amssymb}
+\usepackage{amsthm}
+\usepackage{enumitem}
+\usepackage{xcolor}
+\usepackage{hyperref}
+\usepackage{graphicx}
+
+% środowisko do zadań
+\newtheorem{zadanie}{Zadanie}[section]
+
+\title{Lekcja 5: Problemy otwarte i motywacja do dalszych rozkładów macierzowych}
+\author{}
+\date{}
+
+\begin{document}
+\maketitle
+
+\begin{quote}
+\emph{“Not every system has a solution, not every matrix is invertible. 
+But every matrix hides structure — and we need tools to uncover it.”}
+\end{quote}
+
+\section*{Dlaczego problemy otwarte?}
+W algebrze liniowej klasyczne twierdzenia często zakładają warunki idealne 
+(np. macierz kwadratowa, niezerowy wyznacznik). 
+W praktyce:
+\begin{itemize}
+  \item układy równań bywają sprzeczne,
+  \item macierze są prostokątne i zdegenerowane,
+  \item dane zawierają szum.
+\end{itemize}
+Dlatego przechodzimy od teorii klasycznej do narzędzi ogólnych, 
+jak rozkład SVD (Singular Value Decomposition).
+
+\section*{Definicja SVD}
+Niech \(A\in\mathbb{R}^{m\times n}\). Istnieją macierze ortogonalne 
+\(U\in\mathbb{R}^{m\times m}\), \(V\in\mathbb{R}^{n\times n}\)
+oraz diagonalna \(\Sigma\in\mathbb{R}^{m\times n}\) z nieujemnymi elementami
+\(\sigma_1\ge \sigma_2\ge \cdots \ge 0\) takie, że
+\[
+A=U\,\Sigma\,V^\top.
+\]
+
+\section{  SVD i macierz Hadamarda}
+\begin{itemize}
+  \item Pytanie otwarte: czy dla każdego rzędu $n$ istnieje macierz Hadamarda?
+  \item Znane tylko dla $n=1,2$ i wielokrotności $4$ do pewnego rozmiaru.
+  \item macierz Hadamarda: macierz $\pm1$ o ortogonalnych wierszach.
+\end{itemize}
+
+\textbf{Uwaga:} jeżeli \(H_n\) istnieje, to \(\tfrac{1}{\sqrt{n}}H_n\) jest macierzą ortogonalną.  
+Dla \(H_4\) można sprawdzić, że
+\[
+H_4H_4^\top = 4I.
+\]
+
+\begin{zadanie}
+Zweryfikuj powyższe równanie.
+Jaki jest najprostszy rozkład SVD dla macierzy $H_4$?
+Czy potrafisz napisać wzory dla dowolnej macierzy \(H_n\)?
+\end{zadanie}
+
+To przykład, gdzie SVD jest trywialne — wszystkie wartości osobliwe są równe 
+$\sqrt{n}$. Pokazuje to, że nie zawsze SVD jest narzędziem odkrywczym; czasem potwierdza tylko znaną symetrię.
+
+\section{ Zastosowanie SVD} 
+\[
+A = \begin{bmatrix}
+  3 &  1 &  1 &  1 \\
+  1 & 0 &  1 & 0 \\
+  1 &  1 & 0 & 0 \\
+  1 & 0 & 0 &  1
+\end{bmatrix}.
+\]
+\begin{zadanie}
+Wyznacz pseudoodwrotną macierz \(A^\dagger\).  
+Sprawdź wynik na dwa sposoby:
+\begin{enumerate}
+  \item bezpośrednio z definicji pseudoodwrotności,
+  \item przez rozkład SVD: $A = U\Sigma V^\top$, a następnie
+$A^\dagger = V\Sigma^\dagger U^\top$, 
+gdzie $\Sigma^\dagger$ powstaje przez odwrócenie dodatnich 
+(niezerowych) wartości osobliwych i ma rozmiar $n\times m$. Zaobserwuj to w przykładzie.
+\end{enumerate}
+\end{zadanie}
+
+\medskip
+
+\section{ Sprzeczny układ równań}
+Rozważmy układ
+\[
+x+y=1,\qquad x+y=2,\qquad x-y=0.
+\]
+W zapisie macierzowym:
+\[
+A=\begin{bmatrix}1 & 1 \\ 1 & 1 \\ 1 & -1\end{bmatrix}, \quad
+b=\begin{bmatrix}1 \\ 2 \\ 0\end{bmatrix}.
+\]
+
+\begin{itemize}
+  \item Układ nie ma rozwiązania dokładnego.
+  \item Jak znaleźć „najlepsze przybliżenie”?
+\end{itemize}
+
+\textbf{Odpowiedź:} metoda najmniejszych kwadratów, pseudoodwrotność, rzut na podprzestrzeń.
+
+\begin{zadanie}
+Wyznacz macierz pseudoodwrotną \(A^\dagger\) metodą SVD oraz rozwiązanie 
+\(x^\dagger = A^\dagger b\). 
+\end{zadanie}
+
+Pseudoodwrotność daje punkt „najbliższy” wszystkim trzem równaniom w sensie LSQ,
+błąd średniokwadratowy.
+
+\begin{zadanie}
+Wspólnie z AI napisz działający program w~R, który rozwiązuje problem optymalizacji
+\[
+x^\dagger=\operatorname*{argmin}_{x\in\mathbb{R}^2}\|Ax-b\|_2.
+\] 
+\end{zadanie}
+
+\medskip
+
+\section{ Kompresja obrazu}
+Obraz cyfrowy można zapisać jako macierz pikseli (np. w skali szarości).
+\begin{itemize}
+  \item Jak zapisać obraz przybliżony mniejszą liczbą danych?
+  \item Czy da się znaleźć \emph{najlepszą} macierz o zadanej randze $k$?
+\end{itemize}
+\textit{Wskazówka:} Aproksymacja rangi $k$ to 
+$A_k = \sum_{i=1}^{k} \sigma_i u_i v_i^\top$, 
+a tw. Eckarta–Younga mówi, że $A_k$ minimalizuje $\|A - X\|_F$ wśród $\operatorname{rank}(X)\le k$.
+
+
+\begin{zadanie}
+Zredukuj rangę macierzy \(A\) korzystając z~SVD.  
+Porównaj ilość danych potrzebnych do przechowania macierzy pełnej i macierzy o zredukowanej randze.
+\end{zadanie}
+
+\begin{zadanie}
+(Doświadczalne) Wczytaj w R lub Pythonie prosty obraz (np. czarno-biały kwadrat \(8\times 8\)).  
+Zastosuj SVD i zapisz obraz przybliżony rangą \(k=1,2,3\).  
+Jak zmienia się jakość wizualna?
+\end{zadanie}
+
+\medskip
+
+\section{ Non-negative matrix factorization (NMF)}
+Załóżmy, że mamy dane tylko z wartościami nieujemnymi (np. liczba słów w dokumentach, intensywności pikseli), np.
+\[
+A = \begin{bmatrix}
+  3 &  1 &  1 &  1 \\
+  1 & 0 &  1 & 0 \\
+  1 &  1 & 0 & 0 \\
+  1 & 0 & 0 &  1
+\end{bmatrix}.
+\]
+\begin{itemize}
+  \item Czy można przybliżyć taką macierz iloczynem dwóch macierzy nieujemnych?
+  \item Taki rozkład istnieje, ale nie zawsze jest jednoznaczny.
+\end{itemize}
+
+\textbf{Zastosowania:} analiza tekstu, rozpoznawanie obrazów, biologia obliczeniowa.  
+
+\begin{zadanie}
+Wyznacz (numerycznie) rozkład macierzy \(A\) na macierze nieujemne.  
+Zastanów się, dlaczego wymóg nieujemności ma sens w analizie danych (np. słowa, piksele). 
+\end{zadanie}
+Pytanie do grupy: „Dlaczego SVD może dać wartości ujemne, a NMF nie?” —  proszę o komentarz grupy, dyskusję.
+
+\textit{Wskazówka:} Sformułuj problem jako 
+$\min_{W,H\ge 0}\ \|A-WH\|_F^2$ przy zadanej randze wewnętrznej $r$.
+\medskip
+
+\section*{Podsumowanie lekcji 5}
+Problemy otwarte i praktyczne motywują nas do rozkładów macierzowych:
+\begin{itemize}
+  \item SVD — zawsze działa, daje pełny obraz struktury,
+  \item inne rozkłady (NMF, CUR) — użyteczne w analizie danych,
+  \item inspiracja do dalszych badań i zastosowań.
+\end{itemize}
+Widzimy więc trzy poziomy zastosowania:
+\begin{itemize}
+\item  struktury matematyczne (Hadamard),
+\item  rozwiązywanie równań (sprzeczne układy),
+\item analiza danych (obrazy, tekst).
+\end{itemize}
+Wszystko łączy jedno narzędzie — rozkłady macierzowe.
+
+\section*{Pytanie do grupy}
+Jakie inne sytuacje (poza matematyką) znacie, gdzie nie ma „dokładnego rozwiązania”, 
+ale szukamy najlepszego przybliżenia?
+
+\end{document}

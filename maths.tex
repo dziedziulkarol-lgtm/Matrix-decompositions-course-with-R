@@ -1,0 +1,163 @@
+\documentclass[12pt]{article}
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[polish]{babel}
+\usepackage{lmodern}
+\usepackage{geometry}
+\geometry{margin=1in}
+\let\lll\undefined
+\usepackage{amsmath,amssymb,amsthm}
+\usepackage{enumitem}
+\usepackage{xcolor}
+\usepackage{hyperref}
+
+
+% --- Środowiska ---
+\newtheorem{defi}{Definicja}
+\newtheorem{theo}{Twierdzenie}
+\newtheorem{prop}{Własność}
+\newtheorem{ex}{Przykład}
+\newtheorem{exer}{Zadanie}
+\newcommand{\Sp}{\mathrm{Sp}}
+
+\title{Transformata Fouriera, operatory $Q$ i $P$ oraz grupa symplektyczna}
+\author{}
+\date{}
+
+\begin{document}
+\maketitle
+
+\section{Transformata Fouriera na $L^2$}
+\begin{defi}
+Dla $f\in S(\mathbb{R})$ (funkcje Schwartzowskie) definiujemy
+\[
+(\mathcal{F}f)(p) = \frac{1}{\sqrt{2\pi}}\int_{\mathbb{R}} f(q)\, e^{-i p q}\, dq.
+\]
+\end{defi}
+
+\begin{theo}[Plancherel]
+Transformata Fouriera $\mathcal{F}$ rozszerza się jednoznacznie do operatora unitarnego
+\[
+\mathcal{F}:L^2(\mathbb{R})\to L^2(\mathbb{R}).
+\]
+\end{theo}
+
+\section{Dwa naturalne operatory}
+\begin{defi}
+Na $\mathcal{H}=L^2(\mathbb{R})$ definiujemy:
+\begin{align*}
+(Qf)(x) &= x f(x), & \mathrm{Dom}(Q)&=\{f: xf(x)\in L^2\},\\
+(Pf)(x) &= -i f'(x), & \mathrm{Dom}(P)&=H^1(\mathbb{R}).
+\end{align*}
+\end{defi}
+
+\begin{prop}[Relacja kanoniczna]
+Na odpowiedniej gęstej dziedzinie zachodzi
+\[
+[Q,P]=QP-PQ = i I.
+\]
+\end{prop}
+
+\begin{prop}[Przestrzeń wspólnej definicji]
+Najwygodniej pracować na przestrzeni Schwartzowskiej $S(\mathbb{R})$, która jest gęsta w $L^2$ i stabilna względem działania $Q$ i~$P$.
+Dla $f\in S(\mathbb{R})$ zachodzi dokładna równość
+\[
+(QP - PQ)f = i f.
+\]
+\end{prop}
+
+\paragraph{Nawias Poissona (klasyka).} 
+Na $\mathbb{R}^{2n}$ z współrzędnymi $(q,p)$ i formą symplektyczną 
+\[
+\omega = \sum_{i=1}^n dq_i\wedge dp_i
+\]
+definiujemy dla gładnych funkcji $f,g\in C^\infty(\mathbb{R}^{2n})$ nawias
+\[
+\{f,g\} = \sum_{i=1}^n 
+\left( \frac{\partial f}{\partial q_i}\frac{\partial g}{\partial p_i}
+     - \frac{\partial f}{\partial p_i}\frac{\partial g}{\partial q_i}\right).
+\]
+W mechanice kwantowej relacja $[Q,P]=iI$ jest dyskretnym odpowiednikiem klasycznego faktu $\{q,p\}=1$.
+\section{Fourier a operatory $Q$ i $P$}
+\begin{prop}
+Zachodzi
+\[
+\mathcal{F} Q \mathcal{F}^{-1} = P, \qquad 
+\mathcal{F} P \mathcal{F}^{-1} = -Q.
+\]
+\end{prop}
+
+\begin{proof}[Idea dowodu]
+Dla $f\in S(\mathbb{R})$ mamy
+\[
+(\mathcal{F}(Qf))(p) = \frac{1}{\sqrt{2\pi}}\int x f(x) e^{-ipx}\,dx
+= i\frac{d}{dp}(\mathcal{F}f)(p),
+\]
+co daje pierwszą równość. Analogicznie dla $P$.
+\end{proof}
+
+\section{Interpretacja symplektyczna}
+Rozważmy przestrzeń liniową $\mathbb{R}^2$ ze współrzędnymi $(q,p)$ i formą symplektyczną
+\[
+\omega((q,p),(q',p')) = q p' - p q'.
+\]
+
+\begin{defi}
+Grupa symplektyczna $\Sp(2,\mathbb{R})$ to zbiór macierzy $A\in GL(2,\mathbb{R})$ takich, że
+\[
+A^\top J A = J, \qquad 
+J=\begin{bmatrix}0&1\\ -1&0\end{bmatrix}.
+\]
+\end{defi}
+
+\begin{ex}
+Macierz
+\[
+R=\begin{bmatrix}0&1\\ -1&0\end{bmatrix}
+\]
+należy do $\Sp(2,\mathbb{R})$ i odpowiada rotacji $(q,p)\mapsto(p,-q)$.
+\end{ex}
+
+\section{Most między analizą a geometrią}
+\begin{itemize}
+\item Fourier na $L^2$ jest operatorem unitarnym.
+\item Relacje $\mathcal{F}Q\mathcal{F}^{-1}=P$, $\mathcal{F}P\mathcal{F}^{-1}=-Q$ pokazują, że Fourier zamienia operator mnożenia i różniczkowania.
+\item Algebraicznie to odpowiada rotacji $(q,p)\mapsto(p,-q)$ w grupie $\Sp(2,\mathbb{R})$.
+\item Formalnie: transformata Fouriera jest realizacją tej rotacji w tzw. reprezentacji metaplektycznej.
+\end{itemize}
+
+\section{Zadania dla studentów}
+\begin{exer}
+Udowodnij, że dla $f(x)=e^{-x^2/2}$ zachodzi $\mathcal{F}f=f$. 
+\end{exer}
+
+\begin{exer}
+Sprawdź bezpośrednio, że $\mathcal{F}Q\mathcal{F}^{-1}=P$. 
+\end{exer}
+
+\begin{exer}
+Pokaż, że macierz rotacji $R$ należy do $\Sp(2,\mathbb{R})$, czyli $R^\top J R=J$. 
+\end{exer}
+
+\begin{exer}
+Dla chętnych: sprawdź, że $\det A=1$ dla każdego $A\in \Sp(2,\mathbb{R})$. 
+\end{exer}
+
+\section*{Kącik angielski}
+\begin{itemize}[label=$\triangleright$]
+\item position operator — operator położenia ($Q$)
+\item momentum operator — operator pędu ($P$)
+\item canonical commutation relation — relacja kanoniczna komutacyjna
+\item symplectic group — grupa symplektyczna
+\item metaplectic representation — reprezentacja metaplektyczna
+\end{itemize}
+
+\section*{Literatura}
+\begin{enumerate}
+\item E. Stein, R. Shakarchi, \emph{Fourier Analysis: An Introduction}.
+\item V. I. Arnold, \emph{Mathematical Methods of Classical Mechanics}.
+\item M. Reed, B. Simon, \emph{Methods of Modern Mathematical Physics}, vol. I.
+\end{enumerate}
+
+\end{document}

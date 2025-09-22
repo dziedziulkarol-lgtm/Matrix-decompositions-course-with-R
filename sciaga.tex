@@ -1,0 +1,69 @@
+\documentclass[12pt]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage{geometry}
+\geometry{margin=1in}
+\usepackage{amsmath,amssymb}
+\usepackage{xcolor}
+
+\title{Ściąga: Non-negative Matrix Factorization (NMF)}
+\author{}
+\date{}
+
+\begin{document}
+\maketitle
+
+\section*{Definicja}
+Dla macierzy $A\in \mathbb{R}^{m\times n}_{\ge 0}$ i zadanej rangi $r$ szukamy
+\[
+A \approx WH, \qquad
+W\in \mathbb{R}^{m\times r}_{\ge 0},\ H\in \mathbb{R}^{r\times n}_{\ge 0}.
+\]
+
+\section*{Własności i różnice do SVD}
+\begin{itemize}
+  \item \textbf{SVD:} zawsze istnieje, daje najlepszą aproksymację rangi $r$ (tw. Eckarta--Younga), ale wektory mogą mieć wartości ujemne.
+  \item \textbf{NMF:} ogranicza się do nieujemnych $W,H$, brak tw. Eckarta--Younga, problem jest niekonweksyjny (wiele minimów lokalnych).
+  \item Interpretacja: $W$ = „części składowe” (features), $H$ = „intensywności” (coefficients).
+\end{itemize}
+
+\section*{Zastosowania}
+\begin{itemize}
+  \item analiza tekstu (\emph{topics as word combinations}),
+  \item rozpoznawanie obrazów (części twarzy, obiektów),
+  \item bioinformatyka (ekspresja genów, sygnały).
+\end{itemize}
+
+\section*{Algorytmy (intuicja)}
+\begin{itemize}
+  \item \textbf{Multiplicative updates (Lee--Seung, 1999):}
+        $W \gets W \cdot \frac{AH^\top}{WHH^\top}$,
+        $H \gets H \cdot \frac{W^\top A}{W^\top WH}$.
+  \item \textbf{Alternating least squares:} naprzemienne rozwiązywanie LS z rzutem na nieujemne.
+  \item \textbf{Sparsity (Hoyer, 2004):} dodatkowe wymuszenie rzadkości (np. regularyzacja $L_1$).
+\end{itemize}
+
+\section*{Problemy praktyczne}
+\begin{itemize}
+  \item \textbf{Inicjalizacja:} różne starty $\Rightarrow$ różne minima lokalne.
+  \item \textbf{Skalowanie:} dla dowolnej macierzy diagonalnej $D>0$: $WH = (WD)(D^{-1}H)$.
+  \item \textbf{Brak gwarancji globalnej optymalności.}
+\end{itemize}
+
+\section*{Do dyskusji}
+\begin{itemize}
+  \item Kiedy warto użyć NMF, mimo większego błędu niż SVD?
+  \item Jak interpretować „części składowe” w danych (np. piksele obrazu, słowa w tekście)?
+  \item Czy można pogodzić NMF z twierdzeniem Eckarta--Younga?
+\end{itemize}
+
+\section*{English Corner}
+\begin{itemize}
+  \item parts-based representation
+  \item non-convex optimization
+  \item multiplicative updates
+  \item sparse coding
+\end{itemize}
+
+\end{document}

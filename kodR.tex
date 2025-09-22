@@ -1,0 +1,260 @@
+\documentclass[12pt]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage{geometry}
+\geometry{margin=1in}
+\usepackage{amsmath,amssymb}
+\usepackage{enumitem}
+\usepackage{xcolor}
+\usepackage{hyperref}
+\usepackage{listings}
+\usepackage{listingsutf8}
+\usepackage{amsthm}
+
+\newtheorem{theorem}{Theorem}[section]
+
+\newtheorem{proposition}[theorem]{Proposition}
+
+% --- Listings: R + polskie znaki ---
+\lstset{
+  inputencoding=utf8,
+  language=R,
+  basicstyle=\ttfamily\footnotesize,
+  backgroundcolor=\color{gray!10},
+  frame=single,
+  breaklines=true,
+  keywordstyle=\color{blue},
+  commentstyle=\color{teal!80!black},
+  stringstyle=\color{brown!90!black},
+  showstringspaces=false,
+  literate=
+    {ą}{{\k{a}}}1 {Ą}{{\k{A}}}1
+    {ć}{{\'c}}1 {Ć}{{\'C}}1
+    {ę}{{\k{e}}}1 {Ę}{{\k{E}}}1
+    {ł}{{\l{}}}1 {Ł}{{\L{}}}1
+    {ń}{{\'n}}1 {Ń}{{\'N}}1
+    {ó}{{\'o}}1 {Ó}{{\'O}}1
+    {ś}{{\'s}}1 {Ś}{{\'S}}1
+    {ż}{{\.z}}1 {Ż}{{\.Z}}1
+    {ź}{{\'z}}1 {Ź}{{\'Z}}1
+    {–}{{-}}1
+}
+
+\title{Approximate Non-negative Matrix Factorization (NMF) w R\\
+\large Zadania i porównanie z SVD}
+\author{}
+\date{}
+
+\begin{document}
+Dla
+$X \approx W H, W \geq 0, H\geq 0.$ Ranga k. 
+All algorithms in NMF are accessible by their respective access key as listed below. The following algorithms are available:
+‘brunet’
+Standard NMF, based on the Kullback-Leibler divergence, from Brunet et al. (2004). It uses simple multiplicative updates from Lee et al. (2001), enhanced to avoid numerical underflow.
+Brunet J, Tamayo P, Golub TR and Mesirov JP (2004). "Metagenes and molecular pattern discovery using matrix factorization."i 5 innych w tym algorytm 'lee'
+
+\begin{quote}
+\textbf{Uwaga praktyczna (metoda \texttt{brunet}).}  
+Metoda \texttt{method="brunet"} w pakiecie \texttt{NMF} (R) odpowiada
+algorytmowi multiplikatywnych uaktualnień Lee--Seung (2001) dla
+funkcji celu opartej na dywergencji Kullbacka--Leiblera:
+\begin{equation}
+\label{Kullback}
+  D_{\mathrm{KL}}(X \,\|\, WH) \;=\; 
+  \sum_{i,j}\!\Bigl(X_{ij}\,\log\!\frac{X_{ij}}{(WH)_{ij}} - X_{ij} + (WH)_{ij}\Bigr).
+\end{equation}
+Aktualizacje przyjmują postać
+\[
+  H \leftarrow H \odot 
+  \frac{W^\top \!\left(\tfrac{X}{WH}\right)}{W^\top \mathbf{1}}, 
+  \qquad
+  W \leftarrow W \odot 
+  \frac{\left(\tfrac{X}{WH}\right) H^\top}{\mathbf{1} H^\top},
+\]
+gdzie dzielenie i mnożenie wykonywane są element po elemencie.
+Podobnie jak w przypadku metody \texttt{lee}, możliwe są niewielkie różnice
+w implementacjach (np.~wartość parametru $\varepsilon$, zabezpieczenia
+przed ``zero-lockingiem'', kryteria stopu).  
+
+Metoda \texttt{brunet} jest szczególnie użyteczna dla danych typu
+zliczeniowego (np.~macierze częstości słów, dane RNA-seq), gdyż
+dywergencja KL lepiej modeluje rozkład Poissona niż błąd Frobeniusa.
+\end{quote}
+Do wyjaśnienia pozostaje wzór (\ref{Kullback}). \section*{Od modelu jednowymiarowego do NMF}
+
+Na początek klasyczny model. Obserwujemy wektor zliczeń
+$k=(k_1,k_2,\ldots,k_n)$, gdzie każda  $k_j$ to realizacja zmiennej losowej $K$   o rozkładzie
+Poissona z parametrem $\lambda>0$. Przykład interpretacji:
+liczba klientów w domu towarowym w godzinie 10:00--10:30.
+Rozkład prawdopodobieństwa ma postać
+\[
+\mathbb{P}(K=k)=e^{-\lambda}\frac{\lambda^k}{k!},\qquad k=0,1,2,\ldots
+\]
+
+Parametr $\lambda$ jest nieznany. Funkcja wiarygodności oparta
+na próbie $(k_1,\ldots,k_n)$ wynosi
+\[
+L(\lambda\mid k)=\prod_{j=1}^n e^{-\lambda}\frac{\lambda^{k_j}}{k_j!},
+\]
+a jej logarytm
+\[
+\ell(\lambda\mid k)=\sum_{j=1}^n\bigl(-\lambda+k_j\log\lambda-\log(k_j!)\bigr).
+\]
+Warunek pierwszego rzędu daje estymator największej wiarogodności:
+\[
+\hat{\lambda}=\frac{1}{n}\sum_{j=1}^n k_j,
+\]
+czyli po prostu średnią empiryczną.
+
+\bigskip
+\noindent
+\textbf{Uogólnienie macierzowe.}
+Załóżmy teraz, że obserwujemy macierz zliczeń
+$X=(X_{ij})\in\mathbb{R}_+^{m\times n}$, gdzie
+\[
+X_{ij}\sim \mathrm{Poisson}((WH)_{ij}),
+\]
+a $W,H\ge 0$ są macierzami czynnikowymi. Parametry rozkładów
+Poissona to $\lambda_{ij}=(WH)_{ij}$, zaś $W,H$ pełnią rolę
+parametrów modelu, które je generują.
+
+Log-wiarygodność (z dokładnością do stałej zależnej od $X$) wynosi
+\[
+\ell(W,H\mid X)=\sum_{i,j}\Bigl(X_{ij}\log(WH)_{ij}-(WH)_{ij}\Bigr).
+\]
+Minimalizacja ujemnej log-wiarygodności po $W,H\ge 0$ jest równoważna
+minimalizacji tzw.~uogólnionej dywergencji Kullbacka--Leiblera:
+\[
+D_{\mathrm{KL}}(X\|WH)=\sum_{i,j}\Bigl(X_{ij}\log\frac{X_{ij}}{(WH)_{ij}}
+-X_{ij}+(WH)_{ij}\Bigr).
+\]
+
+\medskip
+\noindent
+W ten sposób klasyczny model jednowymiarowy przechodzi naturalnie
+w macierzowy model NMF z funkcją celu opartą na dywergencji KL.
+
+\begin{proposition}
+Niech $X\in\mathbb{R}_+^{m\times n}$. Przyjmijmy model
+$X_{ij}\sim\mathrm{Poisson}((WH)_{ij})$ z $W,H\ge 0$.
+Wówczas maksymalizacja wiarygodności po $(W,H)$ jest równoważna
+minimalizacji po $(W,H)$ funkcji
+\[
+D_{\mathrm{KL}}(X\|WH)
+=\sum_{i,j}\!\Bigl(X_{ij}\log\frac{X_{ij}}{(WH)_{ij}}-X_{ij}+(WH)_{ij}\Bigr).
+\]
+\end{proposition}
+
+\begin{proof}
+Log-wiarygodność ma postać
+\[
+\log L(W,H;X)=\sum_{i,j}\Bigl(X_{ij}\log(WH)_{ij}-(WH)_{ij}-\log(X_{ij}!)\Bigr).
+\]
+Zatem (z dokładnością do stałej $C(X)=\sum_{i,j}\log(X_{ij}!)$ niezależnej od $(W,H)$)
+ujemna log-wiarygodność wynosi
+\[
+-\log L(W,H;X)=\sum_{i,j}\Bigl((WH)_{ij}-X_{ij}\log(WH)_{ij}\Bigr)+C(X).
+\]
+Dodając i odejmując $X_{ij}\log X_{ij}-X_{ij}$ wewnątrz sumy, dostajemy
+\[
+-\log L(W,H;X)=
+\sum_{i,j}\Bigl(X_{ij}\log\frac{X_{ij}}{(WH)_{ij}}-X_{ij}+(WH)_{ij}\Bigr)+C'(X),
+\]
+gdzie $C'(X)$ nie zależy od $(W,H)$. Minimalizacja $-\log L(W,H;X)$
+po $W,H\ge 0$ jest więc równoważna minimalizacji $D_{\mathrm{KL}}(X\|WH)$
+po $W,H\ge 0$.
+
+
+\paragraph{Konwencje brzegowe.}
+Przyjmujemy $0\log\frac{0}{y}=0$ dla $y>0$ oraz $D_{\mathrm{KL}}(X\|WH)=+\infty$
+gdy istnieje $X_{ij}>0$ i $(WH)_{ij}=0$ (w praktyce używa się małego $\varepsilon>0$).
+
+\smallskip
+
+\end{proof}
+
+
+W programie poniżej nie używa się  pakietu NMF bezpośrednio napisany algorytm 'lee' z pakietu NMF, Lee DD and Seung H (2001). "Algorithms for non-negative matrix factorization." Advances in neural information processing systems
+
+\begin{quote}
+\textbf{Uwaga praktyczna.}  
+Prosta implementacja algorytmu NMF z multiplikatywnymi uaktualnieniami
+(Lee--Seung, 2001) dla normy Frobeniusa
+\[
+  \tfrac{1}{2}\|X - WH\|_F^2
+\]
+jest równoważna metodzie \texttt{method="lee"} w pakiecie \texttt{NMF} (R).
+Różnice w wynikach mogą wynikać z:
+\begin{itemize}[label=$\triangleright$]
+  \item \emph{inicjalizacji} macierzy $W,H$ (różne seedy, metody startowe),
+  \item opcjonalnej \emph{normalizacji kolumn} $W$ (w niektórych implementacjach),
+  \item wartości parametru $\varepsilon$ chroniącego przed ``zero-lockingiem'',
+  \item kryterium stopu (sztywna liczba iteracji vs.~tolerancja błędu).
+\end{itemize}
+Należy pamiętać, że rozkłady NMF nie są unikalne: rozwiązania są tożsame
+tylko do skalowania i permutacji kolumn macierzy $W$ (oraz odpowiednich
+wierszy $H$). W praktyce porównujemy więc jakość aproksymacji
+$\|X-WH\|_F$ albo podobieństwo struktur kolumn $W$.
+\end{quote}
+
+
+\begin{lstlisting}
+
+# --- Lekcja 8: Aproksymacja macierzami nieujemnymi (NMF) ---
+# Start: 128x128 macierz z pliku CSV (wartości w [0,1])
+#  ranga k
+
+# 1) Wczytaj macierz
+X <- as.matrix(read.csv("C:/Users/Karol Dziedziul/Dropbox/matrix/lecture5/img_small.csv", check.names = FALSE))
+storage.mode(X) <- "double"
+
+# (opcjonalnie) normalizacja do [0,1], gdyby było poza zakresem
+rng <- range(X, na.rm = TRUE)
+if (rng[1] < 0 || rng[2] > 1) X <- (X - rng[1]) / (rng[2] - rng[1])
+
+# Upewnij się, że nie ma ujemnych drobiazgów numerycznych
+X[X < 0] <- 0
+
+# 2) Prosta implementacja NMF (multiplicative updates Lee–Seung, błąd Frobeniusa)
+nmf_mu <- function(X, k, n_iter = 300, eps = 1e-9, seed = 123) {
+  set.seed(seed)
+  m <- nrow(X); n <- ncol(X)
+  W <- matrix(runif(m * k), m, k)
+  H <- matrix(runif(k * n), k, n)
+  for (it in 1:n_iter) {
+    # aktualizacja H
+    WH      <- W %*% H
+    numerH  <- t(W) %*% X
+    denomH  <- t(W) %*% WH + eps
+    H       <- H * (numerH / denomH)
+    # aktualizacja W
+    WH      <- W %*% H
+    numerW  <- X %*% t(H)
+    denomW  <- WH %*% t(H) + eps
+    W       <- W * (numerW / denomW)
+  }
+  list(W = W, H = H)
+}
+
+# 3) Wizualizacja dla k = 1..20 (siatka 4x5) + zapis do PNG
+png("img_nmf_k_grid.png", width = 2500, height = 2000)
+par(mfrow = c(4, 5), mar = c(1, 1, 2, 1))
+
+for (k in 1:20) {
+  fit <- nmf_mu(X, k, n_iter = 300, seed = 123)  # możesz zwiększyć n_iter dla lepszej jakości
+  Ak  <- fit$W %*% fit$H
+  # przycięcie do [0,1] (czasem numerycznie lekko wychodzi)
+  Ak <- pmin(pmax(Ak, 0), 1)
+  image(t(apply(Ak, 2, rev)), col = gray.colors(256), axes = FALSE,
+        main = paste("NMF  k =", k))
+}
+dev.off()
+
+
+
+
+\end{lstlisting}
+
+\end{document}
+

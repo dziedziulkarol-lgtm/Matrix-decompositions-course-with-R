@@ -1,0 +1,278 @@
+\documentclass[12pt]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage{geometry}
+\geometry{margin=1in}
+\usepackage{amsmath,amssymb}
+\usepackage{enumitem}
+\usepackage{xcolor}
+\usepackage{hyperref}
+\usepackage{listings}
+\usepackage{listingsutf8}
+
+% --- Listings: R + polskie znaki ---
+\lstset{
+  inputencoding=utf8,
+  language=R,
+  basicstyle=\ttfamily\footnotesize,
+  backgroundcolor=\color{gray!10},
+  frame=single,
+  breaklines=true,
+  keywordstyle=\color{blue},
+  commentstyle=\color{teal!80!black},
+  stringstyle=\color{brown!90!black},
+  showstringspaces=false,
+  literate=
+    {ą}{{\k{a}}}1 {Ą}{{\k{A}}}1
+    {ć}{{\'c}}1 {Ć}{{\'C}}1
+    {ę}{{\k{e}}}1 {Ę}{{\k{E}}}1
+    {ł}{{\l{}}}1 {Ł}{{\L{}}}1
+    {ń}{{\'n}}1 {Ń}{{\'N}}1
+    {ó}{{\'o}}1 {Ó}{{\'O}}1
+    {ś}{{\'s}}1 {Ś}{{\'S}}1
+    {ż}{{\.z}}1 {Ż}{{\.Z}}1
+    {ź}{{\'z}}1 {Ź}{{\'Z}}1
+    {–}{{-}}1
+}
+
+\title{Approximate Non-negative Matrix Factorization (NMF) w R\\
+\large Zadania i porównanie z SVD}
+\author{}
+\date{}
+
+\begin{document}
+\maketitle
+
+\paragraph{Cel.}
+Dla macierzy $A\in\mathbb{R}_{\ge 0}^{m\times n}$ i rangi $r$ szukamy $A\approx WH$ z $W\ge0,\,H\ge0$,
+minimalizując $\|A-WH\|_F^2$.
+W przeciwieństwie do SVD (Eckart--Young), NMF jest problemem non-convex  (niewypukły), czyli istnieje wiele minimów lokalnych.
+Zaletą są \emph{nieujemne, części-składowe reprezentacje} (parts-based).
+
+\textit{Uwaga:} Pakiet \texttt{NMF} automatycznie ładuje dodatkowe biblioteki
+(\texttt{registry}, \texttt{rngtools}, \texttt{cluster}, \texttt{Biobase}).
+To jest normalne – nie trzeba ich wywoływać ręcznie.
+
+
+\section*{Zadanie 1. NMF w R: szybki start z \texttt{NMF}}
+\begin{lstlisting}
+
+# 1) Zainstaluj/załaduj menedżer Bioconductora
+if (!requireNamespace("BiocManager", quietly = TRUE))
+  install.packages("BiocManager")
+
+# 2) Zainstaluj Biobase (wymagany przez NMF)
+BiocManager::install("Biobase")
+
+# 3) (opcjonalnie) preinstaluj drobne zależności CRAN
+install.packages(c("registry","rngtools","cluster"))
+
+# 4) Zainstaluj i załaduj NMF (CRAN)
+install.packages("NMF")
+library(NMF)
+
+# install.packages("NMF")  # jesli brak
+library(NMF)
+
+set.seed(1)
+A <- matrix(runif(5*4, 0, 5), nrow=5)   # macierz 5x4 nieujemna
+k <- 2
+
+fit <- nmf(A, rank=k, method="brunet", nrun=5, seed=123)
+W <- basis(fit)   # macierz W
+H <- coef(fit)    # macierz H
+Ahat <- W %*% H
+
+# Błąd Frobeniusa
+err <- sqrt(sum((A - Ahat)^2))
+cat("||A - W H||_F =", err, "\n")
+\end{lstlisting}
+
+\section*{Zadanie 2. Porównanie z SVD (ranga $k$)}
+\begin{lstlisting}
+sv <- svd(A)
+U <- sv$u[, 1:k, drop=FALSE]
+D <- diag(sv$d[1:k], nrow=k)
+V <- sv$v[, 1:k, drop=FALSE]
+A_svd <- U %*% D %*% t(V)
+
+err_svd <- sqrt(sum((A - A_svd)^2))
+err_nmf <- sqrt(sum((A - Ahat)^2))
+
+cat(sprintf("Błąd SVD: %.6f   Błąd NMF: %.6f\n", err_svd, err_nmf))
+\end{lstlisting}
+
+\section*{Zadanie 3. Obraz 16$\times$16}
+Porównaj rekonstrukcje SVD i NMF (jak w zadaniach z kompresją obrazu).
+\begin{lstlisting}
+img <- matrix(0, 16, 16)
+img[4:6, ]   <- 1
+img[11:12, ] <- 0.8
+img[ , 9:10] <- img[ , 9:10] + 0.6
+Aimg <- img
+
+# NMF
+fit2 <- nmf(Aimg, rank=3, method="brunet", nrun=5, seed=123)
+W2 <- basis(fit2); H2 <- coef(fit2)
+Ahat2 <- W2 %*% H2
+
+# SVD
+sv2 <- svd(Aimg)
+A_svd2 <- sv2$u[,1:3] %*% diag(sv2$d[1:3]) %*% t(sv2$v[,1:3])
+
+# Błędy
+err_nmf <- sqrt(sum((Aimg - Ahat2)^2))
+err_svd <- sqrt(sum((Aimg - A_svd2)^2))
+cat("Błąd NMF =", err_nmf, "   Błąd SVD =", err_svd, "\n")
+\end{lstlisting}
+
+\section*{Zadanie 4. Minima lokalne}
+\begin{lstlisting}
+# Zadanie 4. Minima lokalne i punkt startowy
+
+# W NMF rozwiązujemy problem niewypukły (non-convex).
+# To oznacza: krajobraz funkcji celu ma wiele minimów lokalnych.
+# Algorytm (np. "brunet") znajdzie minimum, ale nie mamy gwarancji,
+# że to jest minimum globalne. Wynik zależy od punktu startowego
+# (inicjalizacji macierzy W i H).
+
+# Dlatego NMF warto uruchamiać wielokrotnie z różnymi startami
+# i porównywać jakość rozwiązań (np. błąd rekonstrukcji).
+
+trial <- function(seed) {
+  set.seed(seed) # ustawia inny punkt startowy (random initialization)
+  f <- nmf(Aimg, rank=3, method="brunet", seed="random", nrun=1)
+  # Błąd rekonstrukcji (norma Frobeniusa)
+  sqrt(sum((Aimg - basis(f) %*% coef(f))^2))
+}
+
+# Spróbujemy 5 różnych startów:
+errs <- sapply(1:5, trial)
+
+print(errs)
+cat("min / max błędu:", min(errs), max(errs), "\n")
+
+# KOMENTARZ:
+# - Zauważ, że błędy nie są identyczne.
+# - To znaczy: różne losowe starty doprowadziły do różnych minimów lokalnych.
+# - W praktyce używa się nrun > 1, np. nrun=10 lub nrun=30,
+#   i wybiera się najlepsze rozwiązanie (najmniejszy błąd).
+# - To podejście przypomina MLE w złożonych modelach:
+#   jeden algorytm, wiele punktów startowych, wiele możliwych rozwiązań.
+
+\end{lstlisting}
+
+\section*{Zadanie 5. Własna implementacja (multiplicative updates)}
+\begin{lstlisting}
+# Zadanie 5. Własna implementacja NMF (multiplicative updates, Lee–Seung 1999)
+
+# W tym ćwiczeniu NIE korzystamy z pakietów.
+# Sami implementujemy najprostszy algorytm aktualizacji.
+# Dzięki temu widzimy dokładnie, co robi komputer w każdej iteracji.
+
+nmf_mu <- function(M, r=2, iters=200, eps=1e-9) {
+  stopifnot(all(M >= 0))  # NMF wymaga danych nieujemnych
+  m <- nrow(M); n <- ncol(M)
+  
+  # Inicjalizacja: losowe nieujemne macierze W i H
+  W <- matrix(runif(m*r), m, r)
+  H <- matrix(runif(r*n), r, n)
+  
+  for (t in seq_len(iters)) {
+    WH <- W %*% H
+    
+    # Aktualizacja W: W <- W * ( M H^T ) / ( W H H^T )
+    W <- W * ((M %*% t(H)) / pmax(WH %*% t(H), eps))
+    
+    # Aktualizacja H: H <- H * ( W^T M ) / ( W^T W H )
+    WH <- W %*% H
+    H <- H * ((t(W) %*% M) / pmax(t(W) %*% WH, eps))
+    
+    # (opcjonalnie) co 50 iteracji można wypisać błąd:
+    if (t %% 50 == 0) {
+      cat(sprintf("iter %d: ||M - WH||_F=%.6f\n",
+                  t, sqrt(sum((M-W%*%H)^2))))
+    }
+  }
+  list(W=W, H=H, err=sqrt(sum((M - W %*% H)^2)))
+}
+
+# Przykład użycia:
+set.seed(4)
+out <- nmf_mu(Aimg, r=3, iters=300)
+out$err
+
+# KOMENTARZ:
+# - Tu jasno widać, że algorytm tylko mnoży i dzieli macierze.
+# - Nie ma tu "magii" - pakiety NMF implementują w gruncie rzeczy to samo.
+# - Jednak ta wersja jest wolna i może się zatrzymywać w dziwnych punktach,
+#   dlatego w praktyce używa się zoptymalizowanych pakietów.
+# - Dla dydaktyki to jednak świetny przykład: studenci widzą jak działa
+#   jeden z najprostszych algorytmów NMF.
+
+\end{lstlisting}
+
+
+\section*{Komentarz dydaktyczny: NMF a MLE}
+
+\noindent
+\textbf{Non-negative Matrix Factorization (NMF)} rozwiązuje problem
+\[
+\min_{W,H \ge 0} \|A - WH\|_F^2.
+\]
+Funkcja celu jest gładka (kwadrat błędu), ale ograniczenie $W,H \ge 0$ sprawia,
+że problem jest \emph{niewypukły} (\emph{non-convex}).
+Oznacza to:
+\begin{itemize}
+  \item istnieje wiele \textbf{minimów lokalnych} (\emph{local minima}),
+  \item wynik zależy od \textbf{punktu startowego} (\emph{initialization}),
+  \item algorytmy (np. multiplicative updates, ALS) gwarantują jedynie, że
+        błąd będzie malał (\emph{non-increasing error}),
+        ale nie że znajdziemy \emph{globalne optimum}.
+\end{itemize}
+
+\medskip
+\noindent
+\textbf{Porównanie z MLE (Maximum Likelihood Estimation):}
+\begin{itemize}
+  \item w MLE również maksymalizujemy funkcję celu (\emph{log-likelihood}),
+  \item dla prostych modeli (np. regresja liniowa z błędem normalnym) –
+        krajobraz jest \emph{konweksyjny} (\emph{convex}) i optimum globalne jest jedno,
+  \item dla złożonych modeli (np. mieszanki rozkładów, sieci neuronowe) –
+        pojawia się wiele maksimów lokalnych, tak jak w NMF.
+\end{itemize}
+
+\medskip
+\noindent
+\textbf{Wniosek dydaktyczny:} \\
+Studenci powinni obserwować zachowanie algorytmu (wartość błędu, różne starty).
+NMF, podobnie jak MLE w złożonych modelach, uczy nas praktycznej prawdy:
+\emph{algorytmy nie zawsze znajdują jedyną odpowiedź — często wybierają jedno z wielu możliwych rozwiązań}.
+\medskip
+
+\begin{center}
+\fbox{\parbox{0.9\textwidth}{%
+\centering
+\textbf{Ćwiczenie:} uruchom NMF wielokrotnie z różnymi losowymi inicjalizacjami
+i narysuj rozkład uzyskanych wartości błędu.
+Jak bardzo różnią się wyniki?}}
+\end{center}
+
+
+\section*{Pytania do dyskusji}
+\begin{itemize}
+  \item Dlaczego NMF nie ma „twierdzenia Eckarta--Younga”?
+  \item Jak interpretować $W,H$ jako „części” i „intensywności”?
+  \item Jak radzić sobie z różnymi minimami lokalnymi?
+\end{itemize}
+
+\section*{English Corner}
+\begin{itemize}
+  \item parts-based representation
+  \item non-convex optimization
+  \item multiplicative updates
+  \item sparse coding
+\end{itemize}
+
+\end{document}

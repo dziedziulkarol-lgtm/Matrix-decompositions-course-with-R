@@ -1,0 +1,84 @@
+\documentclass[12pt]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage{geometry}
+\geometry{margin=1in}
+\usepackage{amsmath,amssymb,mathtools}
+\usepackage{bm}
+\usepackage{hyperref}
+
+\title{Lekcja 3: Regularyzacja Tichonowa (Ridge) z komentarzami do rachunków}
+\author{}
+\date{}
+
+\begin{document}
+\maketitle
+
+\section*{Problem}
+Rozważmy macierz i wektor prawej strony
+\[
+A=\begin{bmatrix}2 & 1\\ 1 & -1\\ 1 & 1\end{bmatrix},\qquad
+b=\begin{bmatrix}5\\1\\2\end{bmatrix},
+\]
+oraz zadanie regularyzowane (ridge/Tichonow):
+\begin{equation}
+\label{eq:ridge}
+\min_{x\in \mathbb{R}^2}\; f_\lambda(x):=\|Ax-b\|_2^2 + \lambda \, \|x\|_2^2,\qquad \lambda\ge 0.
+\end{equation}
+
+\paragraph{Komentarz.} \(\lambda\) jest mnożnikiem Lagrange'a dla równoważnego problemu z ograniczeniem \(\min \|Ax-b\|_2^2\) s.t. \(\|x\|_2\le \tau\). Większe \(\lambda\) silniej karze duże współczynniki i zmniejsza wariancję kosztem większego błędu aproksymacji.
+
+\section*{Równania normalne i rozwiązanie}
+Funkcja \(f_\lambda\) jest ściśle wypukła, a jej gradient to
+\[
+\nabla f_\lambda(x)=2A^{\top}(Ax-b)+2\lambda x.
+\]
+Warunek stacjonarności prowadzi do zregularyzowanych równań normalnych
+\begin{equation}
+\label{eq:normal}
+(A^{\top}A+\lambda I)x=A^{\top}b.
+\end{equation}
+Zatem
+\begin{equation}
+\label{eq:closed}
+\boxed{\;x(\lambda)=(A^{\top}A+\lambda I)^{-1}A^{\top}b\;}. 
+\end{equation}
+
+\subsection*{Jawne rachunki dla podanego \(A,b\)}
+Najpierw
+\[
+A^{\top}A=\begin{bmatrix}6&2\\2&3\end{bmatrix},\qquad A^{\top}b=\begin{bmatrix}13\\6\end{bmatrix},\qquad
+A^{\top}A+\lambda I=\begin{bmatrix}6+\lambda&2\\2&3+\lambda\end{bmatrix}.
+\]
+Odwrotność macierzy \(2\times2\): \(\begin{bmatrix}a&c\\c&d\end{bmatrix}^{-1}=\frac{1}{ad-c^2}\begin{bmatrix}d&-c\\-c&a\end{bmatrix}\). Stąd
+\begin{align*}
+\det(A^{\top}A+\lambda I)&=(6+\lambda)(3+\lambda)-2\cdot 2=\lambda^2+9\lambda+14,\\
+(A^{\top}A+\lambda I)^{-1}&=\frac{1}{\lambda^2+9\lambda+14}\begin{bmatrix}3+\lambda&-2\\-2&6+\lambda\end{bmatrix}.
+\end{align*}
+Mnożąc przez \(A^{\top}b\) dostajemy
+\begin{align*}
+\boxed{\;x_1(\lambda)=\frac{13\lambda+27}{\lambda^2+9\lambda+14}\;},\qquad
+\boxed{\;x_2(\lambda)=\frac{6\lambda+10}{\lambda^2+9\lambda+14}\;}. 
+\end{align*}
+\textbf{Kontrola numeryczna:} dla \(\lambda=0\) otrzymujemy \(x(0)=\big(\tfrac{27}{14},\tfrac{5}{7}\big)\approx(1.9286,0.7143)\).
+
+\section*{Normy i kompromis bias--variance}
+Niech \(r(\lambda)=Ax(\lambda)-b\). Wtedy \(\|x(\lambda)\|_2=\sqrt{x_1(\lambda)^2+x_2(\lambda)^2}\) i \(\|r(\lambda)\|_2=\|Ax(\lambda)-b\|_2\). Gdy \(\lambda\) rośnie, \((A^{\top}A+\lambda I)^{-1}\) maleje w sensie Loewnera, więc \(\|x(\lambda)\|_2\) maleje, a \(\|r(\lambda)\|_2\) rośnie.
+
+\section*{Równoważność z problemem ograniczonym (szkic KKT)}
+Dla problemu: \(\min\ \|Ax-b\|_2^2\) s.t. \(\|x\|_2\le \tau\) Lagrangian brzmi
+\(\mathcal{L}(x,\lambda)=\|Ax-b\|_2^2+\lambda(\|x\|_2^2-\tau^2)\), \(\lambda\ge0\). Warunek stacjonarności to \eqref{eq:normal}. Dla \(\lambda>0\) ograniczenie jest aktywne; dla \(\lambda=0\) otrzymujemy klasyczne LS.
+
+\section*{Zadania}
+\begin{enumerate}
+  \item Zweryfikuj krok po kroku rachunki prowadzące do wzorów na \(x_1(\lambda),x_2(\lambda)\).
+  \item Oblicz jawnie \(\|Ax(\lambda)-b\|_2^2\) jako funkcję \(\lambda\).
+  \item Narysuj wykresy \(x_1(\lambda),x_2(\lambda)\) oraz \(\|r(\lambda)\|_2,\|x(\lambda)\|_2\) dla \(\lambda\in[0,10]\).
+  \item (Opcj.) Wyznacz z KKT zależność \(\lambda\leftrightarrow \tau\) w problemie ograniczonym.
+\end{enumerate}
+
+\section*{Uwaga o wersji bez kwadratów}
+Jeśli zamiast \eqref{eq:ridge} rozważymy \(\|Ax-b\|_2+\lambda\|x\|_2\), otrzymujemy SOCP; brak prostej postaci zamkniętej, stosuje się subgradienty lub metody KKT dla normy.
+
+\end{document}

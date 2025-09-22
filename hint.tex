@@ -1,0 +1,97 @@
+\documentclass[12pt,a4paper]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage{amsmath,amssymb}
+\usepackage{geometry}
+\geometry{margin=2.5cm}
+
+\begin{document}
+
+\begin{center}
+\Large \textbf{Lekcja 2 – Wskazówki obliczeniowe do Zadań 1–4}
+\end{center}
+
+\section*{Zadanie 1. Układ niedookreślony}
+Układ:
+\[
+x+y=2,\qquad 2x+2y=4.
+\]
+\textbf{Wskazówki.}
+\begin{enumerate}
+  \item Druga równość jest wielokrotnością pierwszej $\Rightarrow$ zbiór rozwiązań:
+  \[
+  \{(x,y)\in\mathbb{R}^2:\; x+y=2\}=\{(t,\,2-t):\; t\in\mathbb{R}\}.
+  \]
+  \item Rozwiązanie minimalnej normy (w sensie Euklidesowym) znajdziesz z
+  \[
+  \min_{t\in\mathbb{R}} \; \|(t,\,2-t)\|_2^2 \;=\; t^2+(2-t)^2,
+  \]
+  co daje $t=1$ i punkt $(1,1)$.
+  \item Dla pseudoodwrotności: jeśli $A=\bigl[\begin{smallmatrix}1&1\\2&2\end{smallmatrix}\bigr]$, $b=\bigl[\begin{smallmatrix}2\\4\end{smallmatrix}\bigr]$, to $x^\star=A^+b$ pokrywa się z rozwiązaniem minimalnej normy, tj. $x^\star=(1,1)$.
+  \item Geometria: rozwiązania tworzą prostą $x+y=2$. Punkt minimalnej normy to rzut $(0,0)$ na tę prostą.
+\end{enumerate}
+
+\section*{Zadanie 2. Stabilność obliczeń}
+Macierz:
+\[
+A_\varepsilon=\begin{bmatrix}1 & 1\\ 1 & 1+\varepsilon\end{bmatrix},\qquad \varepsilon=10^{-4}.
+\]
+\textbf{Wskazówki.}
+\begin{enumerate}
+  \item Kondycję w normie spektralnej można oszacować przez wartości osobliwe: 
+  \(
+  \kappa_2(A)=\dfrac{\sigma_{\max}(A)}{\sigma_{\min}(A)}.
+  \)
+  \item Dla $2\times 2$ wygodnie policzyć wartości własne macierzy symetrycznej $A^\top A$:
+  \[
+  A_\varepsilon^\top A_\varepsilon=
+  \begin{bmatrix}
+  2 & 2+\varepsilon\\
+  2+\varepsilon & 2+2\varepsilon+\varepsilon^2
+  \end{bmatrix}.
+  \]
+  \item Wartości własne $\lambda_{1,2}$ wyznacza wzór
+  \(
+  \lambda_{1,2}=\tfrac{\operatorname{tr}\pm\sqrt{(\operatorname{tr})^2-4\det}}{2}.
+  \)
+  Następnie $\sigma_{1,2}=\sqrt{\lambda_{1,2}}$ i $\kappa_2=\sqrt{\lambda_1/\lambda_2}$.
+  \item Intuicja: gdy $\varepsilon\to 0$, macierz staje się bliska osobliwej, więc $\sigma_{\min}\to 0$ i $\kappa_2\to\infty$ — duża wrażliwość rozwiązań na perturbacje danych.
+\end{enumerate}
+
+\section*{Zadanie 3. Projekcje}
+Teza: $P:=AA^+$ jest rzutem ortogonalnym na $\mathcal{R}(A)$.
+\textbf{Wskazówki.}
+\begin{enumerate}
+  \item Z równań Penrosea: $(AA^+)^\top=AA^+$ (symetria) oraz
+  \(
+  (AA^+)^2=AA^+AA^+=AA^+ \text{ (po wstawieniu $A^+AA^+=A^+$)}.
+  \)
+  To znaczy: $P$ jest idempotentny i symetryczny $\Rightarrow$ rzut ortogonalny.
+  \item Obraz: $\mathcal{R}(P)=\mathcal{R}(AA^+)=\mathcal{R}(A)$.  
+  Jądro: $\mathcal{N}(P)=\mathcal{N}(A^\top)$.
+  \item Interpretacja LS: $x^\star=A^+b$, a wektor dopasowany to $Ax^\star=AA^+b=Pb$, czyli rzut $b$ na przestrzeń kolumn $A$.
+\end{enumerate}
+
+\section*{Zadanie 4. Zmiana normy na $\ell_1$}
+Problem:
+\[
+\min_x \|Ax-b\|_1.
+\]
+\textbf{Wskazówki.}
+\begin{enumerate}
+  \item Wprowadź zmienne pomocnicze $u,v\in\mathbb{R}^m_{\ge 0}$ z $Ax-b=u-v$ i minimalizuj $\mathbf{1}^\top(u+v)$:
+  \[
+  \begin{aligned}
+  \min_{x,u,v}\quad & \mathbf{1}^\top u+\mathbf{1}^\top v\\
+  \text{s.t.}\quad & Ax-b=u-v,\\
+  & u\ge 0,\; v\ge 0.
+  \end{aligned}
+  \]
+  To jest program liniowy.
+  \item Pseudoodwrotność \emph{nie} rozwiązuje problemu $\ell_1$.  
+  W praktyce stosuje się metody PL (simplex/interior-point) albo algorytmy typu iteracyjnej ważonej LS (IRLS).
+  \item Geometria: kula $\ell_1$ to romb (poliedr), więc rozwiązania mają tendencję do „rzadkości” (sprzyja zerowym składowym residuów/parametrów).
+\end{enumerate}
+
+\end{document}

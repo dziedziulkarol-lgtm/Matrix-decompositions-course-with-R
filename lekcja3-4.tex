@@ -1,0 +1,125 @@
+\documentclass[12pt]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage{geometry}
+\geometry{margin=1in}
+\usepackage{amsmath,amssymb}
+\usepackage{enumitem}
+\usepackage{xcolor}
+\usepackage{hyperref}
+
+\title{Lekcja 3-4: Praktyczna powtórka – algebra liniowa}
+\author{}
+\date{}
+
+\begin{document}
+\maketitle
+
+\begin{quote}
+\emph{“Learn how MIT students learn — curiosity first, theory follows.”}
+\end{quote}
+
+\section*{Zadanie domowe (flipped classroom)}
+Obejrzyj w wolnym czasie: \textbf{Wykład 1 MIT-a 18.06}, Gilbert Strang – „The geometry of linear equations” (MIT OCW).\\[0.5em]
+Link: \href{https://ocw.mit.edu/courses/18-06-linear-algebra-spring-2010/resources/lecture-1-the-geometry-of-linear-equations/}{OCW 18.06, Lecture 1}.  
+
+To doskonały wizualny wstęp do trzech interpretacji układów równań liniowych:
+\begin{itemize}
+  \item \emph{row picture} – linie w układzie równań,
+  \item \emph{column picture} – kombinacje liniowe kolumn,
+  \item \emph{matrix picture} – forma macierzowa \(Ax=b\).
+\end{itemize}
+
+\vspace{1em}
+
+
+\vspace{1em}
+\section*{Ściąga – Normy macierzowe}
+
+ Niech $x=[x_1,\ldots,x_n]^T$, $y=[y_1,\ldots,y_n]^T$ wektory w $R^n$.
+ Niech $A$ macierz rzeczywista wymiaru $n\times m$
+ \[
+ A=[a_{i,j}]_{1\leq i\leq n,1\leq j\leq m}
+ \]
+\begin{center}
+\begin{tabular}{|c|c|}
+\hline
+Pojęcie & Wzór \\
+\hline
+Norma euklidesowa & $\|x\|_2 = \sqrt{\sum_i x_i^2}$ \\
+Norma Frobeniusa & $\|A\|_F = \sqrt{\sum_{i,j} a_{ij}^2}$ \\
+Norma operatorowa & $\|A\|_2 = \max_{\|x\|_2=1} \|Ax\|_2$ \\
+Iloczyn skalarny & $\langle x, y \rangle = \sum_i x_i y_i$\\
+\hline
+\end{tabular}
+\end{center}
+\smallskip
+\noindent
+\emph{Uwaga:} Normę operatorową definiuje się zawsze względem ustalonej normy na wektorach.
+Najczęściej przyjmuje się normę euklidesową, co prowadzi do powyższego wzoru.
+
+\vspace{1em}
+\section*{Instrukcja pracy z AI}
+Każdy student wybiera jedno pojęcie i przygotowuje:
+\begin{itemize}
+  \item krótki opis (intuicja, geometria, zastosowanie),
+  \item prosty przykład liczbowy,
+  \item zapis w formacie \LaTeX.
+\end{itemize}
+
+\textbf{Cel:} tworzymy wspólną notatkę grupy, sprawdzamy jakość wyjaśnień AI i dyskutujemy nad nimi.
+
+\vspace{1em}
+\section*{Pojęcia do opracowania}
+
+\subsection*{Dla wszystkich}
+\begin{itemize}[label=$\triangleright$]
+\item Rząd macierzy
+\item Twierdzenie o jednoznaczności rozwiązań
+\item Macierz odwrotna (gdy $\det(A)\neq 0$)
+\item Rzut (projekcja) wektora na podprzestrzeń
+\item Wyznacznik macierzy i jego interpretacja geometryczna
+\item Macierz jako operator
+$A:R^n \to R^m$, obraz operatora i jego jądro
+\item Macierz zespolona jako operator
+$A:C^n \to C^m$, obraz operatora i jego jądro
+\item Macierz ortogonalna \(Q\): \(Q^\top Q = I\). Zachowuje długość i kąty (izometria).
+\item Vandermonde matrix i interpolacja wielomianami pokazać związek
+\item Macierze ortogonalne, przykład: macierz Hadamara
+\end{itemize}
+\subsection*{Dla chętnych (harder topics)}
+\begin{itemize}[label=$\diamond$]
+
+\item Macierz pseudoodwrotna i rozwiązywanie układów równań
+\item Wektory własne i wartości własne 
+\item Normy: Frobeniusa, operatorowa (dlaczego są ważne?)
+\item Graf i jego macierz G. Strang page 129
+\item Macierze stochastyczne
+\item Non-negative matrix factorization (NMF) i przykłady aproksymacji
+Nonnegative matrix approximation (NNMA)
+
+\item Roundoff error G. Strang page 69-70
+\[
+A=\begin{bmatrix}1 & 1\\ 1 & 1.0001\end{bmatrix}.
+\]
+     Jak zmienia się rozwiązanie układu przy niewielkich perturbacjach?
+    
+
+\end{itemize}
+
+
+\vspace{1em}
+\section*{Lekcja 4: mini-prezentacje}
+Każdy student przygotowuje dla grupy krótką prezentację (3–5 minut).  
+Wyniki przesyłamy na stronę grupy przed zajęciami.
+
+\vspace{1em}
+\section*{Po co to wszystko?}
+\begin{itemize}
+  \item Żeby wyrównać szanse studentów z różnym zapleczem,
+  \item Nie zaburzać tempa kursu formalną teorią,
+  \item Promować model \emph{„ucz się, jak MIT”} — prestiż i motywacja.
+\end{itemize}
+
+\end{document}

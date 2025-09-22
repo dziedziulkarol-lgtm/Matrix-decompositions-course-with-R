@@ -1,0 +1,202 @@
+\documentclass[12pt]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage{geometry}
+\geometry{margin=1in}
+\usepackage{amsmath,amssymb}
+\usepackage{xcolor}
+\usepackage{hyperref}
+\usepackage{graphicx}
+
+% --- Kod R w listings (UTF-8 + polskie znaki) ---
+\usepackage{listings}
+\usepackage{listingsutf8}
+\lstset{
+  inputencoding=utf8,
+  language=R,
+  basicstyle=\ttfamily\footnotesize,
+  backgroundcolor=\color{gray!10},
+  frame=single,
+  breaklines=true,
+  keywordstyle=\color{blue},
+  commentstyle=\color{teal},
+  stringstyle=\color{brown},
+  showstringspaces=false,
+  literate=
+    {ą}{{\k{a}}}1 {Ą}{{\k{A}}}1
+    {ć}{{\'c}}1 {Ć}{{\'C}}1
+    {ę}{{\k{e}}}1 {Ę}{{\k{E}}}1
+    {ł}{{\l{}}}1 {Ł}{{\L{}}}1
+    {ń}{{\'n}}1 {Ń}{{\'N}}1
+    {ó}{{\'o}}1 {Ó}{{\'O}}1
+    {ś}{{\'s}}1 {Ś}{{\'S}}1
+    {ż}{{\.z}}1 {Ż}{{\.Z}}1
+    {ź}{{\'z}}1 {Ź}{{\'Z}}1
+    {–}{{-}}1
+}
+
+\title{Kod R do lekcji 5: Pseudoodwrotność i kompresja SVD}
+\author{}
+\date{}
+
+\begin{document}
+\maketitle
+
+\section*{Problem 2: Sprzeczny układ równań, pseudoodwrotność przez SVD}
+
+\begin{lstlisting}
+# Układ:
+# x + y = 1
+# x + y = 2
+# x - y = 0
+A <- matrix(c(1,1,
+              1,1,
+              1,-1), nrow = 3, byrow = TRUE)
+b <- c(1,2,0)
+
+# Pseudoodwrotność Moore–Penrose przez SVD
+pinv_svd <- function(M, tol = NULL) {
+  s <- svd(M)
+  if (is.null(tol)) tol <- max(dim(M)) * .Machine$double.eps * max(s$d)
+  d_inv <- ifelse(s$d > tol, 1 / s$d, 0)
+  s$v %*% diag(d_inv, nrow = length(d_inv), ncol = length(d_inv)) %*% t(s$u)
+}
+
+A_pinv <- pinv_svd(A)
+x_hat  <- A_pinv %*% b
+
+cat("Rozwiązanie najmniejszych kwadratów x^ = A^+ b:\n")
+print(drop(x_hat))
+
+# Reszta i warunki normalne
+r <- b - A %*% x_hat
+cat("\nNorma reszty ||r||_2 =", sqrt(sum(r^2)), "\n")
+cat("||A^T r||_2 =", sqrt(sum((t(A) %*% r)^2)), "\n")
+
+# Projekcja ortogonalna na kolumny A: P = A A^+
+P <- A %*% A_pinv
+cat("\nSprawdzenie: P ~ P^T oraz P^2 ~ P\n")
+cat("||P - t(P)||_F =", norm(P - t(P), "F"), "\n")
+cat("||P%*%P - P||_F =", norm(P %*% P - P, "F"), "\n")
+
+# Własności Moore–Penrose
+MP1 <- norm(A %*% A_pinv %*% A - A, "F")
+MP2 <- norm(A_pinv %*% A %*% A_pinv - A_pinv, "F")
+MP3 <- norm(t(A %*% A_pinv) - (A %*% A_pinv), "F")
+MP4 <- norm(t(A_pinv %*% A) - (A_pinv %*% A), "F")
+cat("\nWarunki Moore–Penrose:\n")
+cat("||AA^+A - A||_F =", MP1, "\n")
+cat("||A^+AA^+ - A^+||_F =", MP2, "\n")
+cat("||(AA^+)^T - AA^+||_F =", MP3, "\n")
+cat("||(A^+A)^T - A^+A||_F =", MP4, "\n")
+\end{lstlisting}
+
+\section*{Problem 3: Kompresja przez SVD (na A i na obrazie 8x8)}
+
+\begin{lstlisting}
+# Macierz 4x4
+A <- matrix(c(3,1,1,1,
+              1,0,1,0,
+              1,1,0,0,
+              1,0,0,1), nrow = 4, byrow = TRUE)
+sv <- svd(A)
+
+# Aproksymacja rangi k
+rank_k_approx <- function(svd_obj, k) {
+  U <- svd_obj$u[, 1:k, drop = FALSE]
+  D <- diag(svd_obj$d[1:k], nrow = k)
+  V <- svd_obj$v[, 1:k, drop = FALSE]
+  U %*% D %*% t(V)
+}
+
+for (k in 1:4) {
+  Ak <- rank_k_approx(sv, k)
+  err <- norm(A - Ak, "F")
+  cat(sprintf("A: k = %d, ||A - A_k||_F = %.6f\n", k, err))
+}
+
+# Koszt przechowywania
+storage_full <- length(A)
+m <- nrow(A); n <- ncol(A)
+storage_rank_k <- function(k) (m + n) * k + k
+for (k in 1:4) {
+  ratio <- storage_rank_k(k) / storage_full
+  cat(sprintf("A: k = %d, liczba liczb = %d (%.2fx mniej niż %d)\n",
+              k, storage_rank_k(k), storage_full / storage_rank_k(k), storage_full))
+}
+
+# Mini-obraz 8x8 (szachownica)
+img <- outer(1:8, 1:8, function(i,j) ifelse((i + j) %% 2 == 0, 1, 0))
+sv_img <- svd(img)
+
+for (k in 1:3) {
+  Ak <- rank_k_approx(sv_img, k)
+  err <- norm(img - Ak, "F")
+  cat(sprintf("IMG 8x8: k = %d, ||img - A_k||_F = %.6f\n", k, err))
+}
+
+# Wizualizacja
+par(mfrow = c(1,4), mar = c(1,1,1,1))
+image(t(apply(img, 2, rev)), axes = FALSE, main = "Oryginał")
+for (k in 1:3) {
+  Ak <- rank_k_approx(sv_img, k)
+  image(t(apply(Ak, 2, rev)), axes = FALSE, main = paste("k =", k))
+}
+\end{lstlisting}
+
+\section*{Twarz (wczytanie i podgląd 128x128)}
+\begin{lstlisting}
+library(jpeg)
+
+# Wczytanie zdjęcia
+img <- readJPEG("C:/Users/Karol Dziedziul/Downloads/karol.jpg")
+
+# Jeżeli kolor -> konwersja na odcienie szarości
+img_gray <- if (length(dim(img)) == 3) {
+  0.299*img[,,1] + 0.587*img[,,2] + 0.114*img[,,3]
+} else {
+  img
+}
+
+# Zmniejsz do 128x128 (indeksy zaokrąglamy do całkowitych)
+img_small <- img_gray[
+  round(seq(1, nrow(img_gray), length.out = 128)),
+  round(seq(1, ncol(img_gray), length.out = 128))
+]
+
+# Podgląd w R
+par(mar = c(0,0,0,0))
+image(t(apply(img_small, 2, rev)), col = gray.colors(256), axes = FALSE, useRaster = TRUE)
+
+# Zapis do CSV
+write.csv(img_small, "img_small.csv", row.names = FALSE)
+
+\end{lstlisting}
+
+\end{document}
+
+# install.packages("jpeg")
+library(jpeg)
+
+# Używaj ukośników / w ścieżce na Windows:
+# img <- readJPEG("C:/Users/Karol Dziedziul/Downloads/karol.jpg")
+img <- readJPEG("C:/Users/Karol Dziedziul/Dropbox/Aga Bartoszek/2.jpg")
+
+# Jeżeli kolor -> szarość
+if (length(dim(img)) == 3) {
+  img_gray <- 0.299*img[,,1] + 0.587*img[,,2] + 0.114*img[,,3]
+} else {
+  img_gray <- img
+}
+
+# Zmniejsz do 128x128
+img_small <- img_gray[seq(1, nrow(img_gray), length.out = 256),
+                      seq(1, ncol(img_gray), length.out = 256)]
+
+# Podgląd
+image(t(apply(img_small,2,rev)), col = gray.colors(256), axes = FALSE)
+
+
+
+

@@ -1,0 +1,377 @@
+\documentclass[12pt]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[polish]{babel}
+
+
+\usepackage{amsmath}
+\let\lll\undefined
+\usepackage{amssymb}
+
+\usepackage{lmodern}
+\usepackage{geometry}
+\geometry{margin=1in}
+%\usepackage{amsmath, amssymb}
+\usepackage{enumitem}
+\usepackage{xcolor}
+\usepackage{hyperref}
+\hypersetup{colorlinks=true, linkcolor=blue, urlcolor=blue}
+\usepackage{listings}
+
+% --- Listings: R + polskie znaki w kodzie ---
+\lstdefinelanguage{R}{
+  morekeywords={if,else,for,while,repeat,break,next,function,return},
+  sensitive=true,
+  morecomment=[l]{\#},
+  morestring=[b]",
+}
+\lstset{
+  language=R,
+  basicstyle=\ttfamily\small,
+  keywordstyle=\color{blue!60!black}\bfseries,
+  commentstyle=\color{green!40!black},
+  stringstyle=\color{red!60!black},
+  showstringspaces=false,
+  columns=fullflexible,
+  upquote=true,
+  frame=single,
+  framerule=0.4pt,
+  rulecolor=\color{black!30},
+  numbers=left,
+  numberstyle=\tiny\color{black!50},
+  numbersep=8pt,
+  xleftmargin=1em,
+  breaklines=true,
+  literate={ą}{{\k{a}}}1 {ć}{{\'c}}1 {ę}{{\k{e}}}1 {ł}{{\l{}}}1
+           {ń}{{\'n}}1 {ó}{{\'o}}1 {ś}{{\'s}}1 {ż}{{\.z}}1 {ź}{{\'z}}1
+           {Ą}{{\k{A}}}1 {Ć}{{\'C}}1 {Ę}{{\k{E}}}1 {Ł}{{\L{}}}1
+           {Ń}{{\'N}}1 {Ó}{{\'O}}1 {Ś}{{\'S}}1 {Ż}{{\.Z}}1 {Ź}{{\'Z}}1,
+}
+
+% Makra
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\rank}{\operatorname{rank}}
+\newcommand{\diag}{\operatorname{diag}}
+\newcommand{\tr}{\operatorname{tr}}
+\newcommand{\spec}{\operatorname{spec}}
+
+% Środowisko problemu otwartego
+\newenvironment{openproblem}{\begin{quote}\color{red}\textbf{Problem otwarty. }}{\end{quote}}
+
+\title{Lekcja: Rozkład LU}
+\author{}
+\date{}
+
+\begin{document}
+\maketitle
+
+\section*{Wprowadzenie historyczne}
+Rozkład macierzy na część dolnotrójkątną i górnotrójkątną był znany już w pierwszej połowie XX wieku.
+Warto przypomnieć, że \textbf{Tadeusz Banachiewicz} (1882--1954), polski matematyk i astronom,
+wprowadził tzw. \emph{kalkulator krakowski} (\emph{Cracovians}), odpowiadający dzisiejszym macierzom.
+Sam rozkład $LU$ określał jako \emph{rozkład krakowski}. W literaturze światowej wspomina się
+także nazwiska \emph{Doolittle} i \emph{Crout}, którzy niezależnie stosowali podobne metody.
+ W zasadzie w tej lekcji będziemy pracować w duchu analizy numerycznej 
+(\emph{in the spirit of numerical analysis}).
+
+\section*{Definicja}
+Niech $A \in \R^{n \times n}$. Mówimy, że $A$ ma \emph{rozkład LU}, jeśli można zapisać
+\[
+A = LU,
+\]
+gdzie:
+\begin{itemize}[label=$\triangleright$]
+\item $L$ jest macierzą dolnotrójkątną (najczęściej z jedynkami na przekątnej),
+\item $U$ jest macierzą górnotrójkątną.
+\end{itemize}
+W praktyce stosujemy pivotowanie częściowe i dostajemy postać $PA=LU$ z macierzą permutacji $P$.
+
+
+Z Wikipedii
+{\it 
+In mathematics, particularly in matrix theory,
+ a permutation matrix is a square binary matrix that has exactly one entry of $1$ in each row and
+ each column with all other entries $0$.  
+  An $n\times n$ permutation matrix can represent a permutation of $n$ elements. Pre-multiplying an $n$-row matrix $M$ by a permutation matrix $P$, forming $PM$, results in permuting the rows of $M$, while post-multiplying an $n$-column matrix $M$, forming $MP$, permutes the columns of $M$.
+
+Every permutation matrix $P$ is orthogonal, with its inverse equal to its transpose: 
+$P^{-1}=P^T$. Indeed, permutation matrices can be characterized as the orthogonal matrices whose entries are all non-negative.}
+
+\section*{Przykład}
+Dla macierzy
+\[
+A = \begin{bmatrix}
+2 & 1 & 1 \\
+4 & -6 & 0 \\
+-2 & 7 & 2
+\end{bmatrix},
+\]
+po eliminacji Gaussa otrzymujemy
+\[
+L = \begin{bmatrix}
+1 & 0 & 0 \\
+2 & 1 & 0 \\
+-1 & -1 & 1
+\end{bmatrix}, \qquad
+U = \begin{bmatrix}
+2 & 1 & 1 \\
+0 & -8 & -2 \\
+0 & 0 & -1
+\end{bmatrix}.
+\]
+
+\section*{Geometria (intuicja)}
+Eliminacja Gaussa to sekwencja dozwolonych operacji wierszowych (kombinacje liniowe wierszy)
+prowadzących do postaci trójkątnej. Macierz $L$ gromadzi mnożniki eliminacji, a $U$ jest efektem
+„wyzerowywania” elementów poniżej przekątnej. \textbf{Uwaga:} ortogonalizacja kolumn to domena rozkładu $QR$,
+a nie $LU$.
+
+\section*{Zastosowania}
+\begin{itemize}[label=$\star$]
+\item Rozwiązywanie układów $Ax = b$ poprzez podstawianie: $Ly = P b$, a następnie $Ux = y$.
+\item  Rozwiązywanie wielu RHS.
+\item Wyznacznik: bez pivotowania $\det(A)=\prod_i u_{ii}$ (gdy $L$ ma jedynki na przekątnej).
+Przy pivotowaniu częściowym $\det(A)=(-1)^{\#\text{zamian}} \prod_i u_{ii}$.
+\item Analiza stabilności numerycznej a wybór pivotów (współczynnik wzrostu).
+
+\end{itemize}
+
+\section*{Ćwiczenia}
+\begin{enumerate}
+\item Rozłóż na $LU$ dowolną macierz $3 \times 3$ i sprawdź dokładność: $\|A-LU\|$.
+\item Czy każda macierz $2 \times 2$ ma rozkład $LU$ bez pivotowania? Podaj kontrprzykład.
+
+\end{enumerate}
+
+\begin{openproblem}
+\textbf{Problemy otwarte związane z rozkładem LU:}
+\begin{enumerate}[label=\alph*)]
+  \item \textbf{Stabilność częściowego pivotowania.}
+  Znane są przykłady ilustrujące zarówno stabilność praktyczną, jak i patologie.
+  Charakterystyka klas macierzy gwarantujących stabilność pozostaje tematem badań.
+  \item \textbf{Optymalizacja fill-in.}
+  W macierzach rzadkich minimalizacja fill-in jest NP-trudna; stosuje się heurystyki
+  (minimum degree, nested dissection).
+  \item \textbf{LU dla macierzy strukturalnych.}
+  Dla Toeplitza, H-macierzy itp. poszukuje się algorytmów o małej złożoności i dobrej stabilności.
+\end{enumerate}
+\end{openproblem}
+
+\section*{Laboratorium R: LU, pivotowanie i stabilność}
+
+Celem jest empiryczne porównanie rozwiązywania $Ax=b$ z i bez pivotowania 
+oraz obserwacja: (i) residuum rozwiązania, (ii) współczynnika wzrostu, 
+(iii) wpływu pivotowania na stabilność.
+
+\subsection*{Pojęcia pomocnicze}
+
+\paragraph{Residuum.}
+Dla przybliżonego rozwiązania $x$ układu $Ax=b$ definiujemy \emph{residuum} (ang. residual)
+\[
+r = b - A x.
+\]
+Jeśli $Ax=b$ jest spełnione dokładnie, to $r=0$. W praktyce numerycznej 
+liczymy raczej \emph{residuum względne}:
+\[
+\frac{\|Ax-b\|}{\|A\|\cdot \|x\|},
+\]
+które mierzy, jak dobrze znalezione $x$ spełnia równanie. 
+Im mniejsze residuum, tym lepsza jakość obliczeń. Jeśli znalibyśmy dokładne rozwiązanie $x^*$ to różnica $x^*-x$ jest błędem (ang. error).
+
+\paragraph{Współczynnik wzrostu (growth factor).}
+Podczas eliminacji Gaussa elementy macierzy mogą „urosnąć” 
+znacznie ponad wartości z macierzy wejściowej. 
+Miarą tego jest:
+\[
+\rho(A) = \frac{\max_{i,j} |u_{ij}|}{\max_{i,j} |a_{ij}|},
+\]
+gdzie $a_{ij}$ oznacza element macierzy $A$, a $u_{ij}$ element macierzy $U$
+otrzymanej w rozkładzie $PA=LU$.  
+Dlaczego tylko $U$? Bo $L$ jest \emph{znormalizowana} – przyjmujemy jedynki na diagonali, 
+a jej elementy poza przekątną to mnożniki eliminacji, które z definicji są mniejsze od 1 
+(przy pivotowaniu). Wzrost pojawia się właśnie w $U$, stąd $\rho$ liczymy względem $U$.
+
+\subsection*{Zadania}
+
+\begin{enumerate}[label=\textbf{Z\arabic*}.]
+
+\item \textbf{(Implementacja)} 
+Zaimplementuj funkcję \texttt{my\_lu\_nopivot(A)} zwracającą listę $(L,U)$ dla rozkładu bez pivotowania. 
+Zabezpiecz się przed zerowym lub bardzo małym pivotem.
+
+\item \textbf{(Porównanie)} 
+Użyj \texttt{Matrix::lu(A)} albo funkcji \texttt{lu\_pp(A)} (podanej poniżej) do rozkładu z pivotowaniem. 
+Rozwiąż $Ax=b$ oboma sposobami i porównaj residuum względne:
+\[
+\frac{\|Ax-b\|}{\|A\|\cdot \|x\|}.
+\]
+
+\item \textbf{(Stabilność i growth factor)} 
+Sprawdź macierz permutacji $P$ (\texttt{lu\$P}) i oblicz:
+\begin{itemize}
+  \item residuum względne dla $Ax=b$, 
+  \item współczynnik wzrostu $\rho(A)$,
+  \item wyznacznik macierzy $A$ poprzez $LU$: 
+  $\det(A)=(-1)^{\#\text{zamian}}\prod_i u_{ii}$.
+\end{itemize}
+Porównaj wyniki dla rozkładu z pivotowaniem i bez pivotowania.
+
+\end{enumerate}
+
+\subsection*{(1) Prosty kod LU bez pivotowania}
+\begin{lstlisting}
+set.seed(1)
+A <- matrix(runif(5*5, 0, 5), nrow=5)   # macierz 5x5 (przykładowa)
+
+my_lu_nopivot <- function(A, tol = 1e-12) {
+  A <- as.matrix(A)
+  n <- nrow(A)
+  L <- diag(1, n)
+  U <- A
+  for (k in 1:(n-1)) {
+    if (abs(U[k,k]) < tol) stop("Zerowy (lub zbyt mały) pivot w kolumnie ", k)
+    for (i in (k+1):n) {
+      L[i,k] <- U[i,k] / U[k,k]
+      U[i,]  <- U[i,] - L[i,k] * U[k,]
+    }
+  }
+  list(L=L, U=U)
+}
+
+lu0 <- my_lu_nopivot(A)
+max(abs(A - lu0$L %*% lu0$U))
+\end{lstlisting}
+
+\subsection*{(2) LU z pivotowaniem częściowym (prosty)}
+\begin{lstlisting}
+set.seed(1)
+A <- matrix(runif(5 * 5, 0, 5), nrow = 5)
+
+lu_pp <- function(A, tol = 1e-12) {
+  A <- as.matrix(A)
+  if (nrow(A) != ncol(A)) stop("LU: macierz musi być kwadratowa.")
+  n <- nrow(A)
+  L <- diag(1, n)
+  U <- A
+  P <- diag(1, n)
+  swap_count <- 0L
+
+  for (k in 1:(n - 1)) {
+    # największy pivot w kolumnie k (wiersze k:n)
+    p <- k - 1 + which.max(abs(U[k:n, k]))
+    if (abs(U[p, k]) < tol) stop("Brak dobrego pivota w kolumnie ", k)
+
+    if (p != k) {
+      # zamiana wierszy w U i P
+      U[c(k, p), ] <- U[c(p, k), ]
+      P[c(k, p), ] <- P[c(p, k), ]
+      # zamiana dotychczasowych mnożników w L (kolumny 1:(k-1))
+      if (k > 1) L[c(k, p), 1:(k - 1)] <- L[c(p, k), 1:(k - 1)]
+      swap_count <- swap_count + 1L
+    }
+
+    # eliminacja poniżej pivota
+    for (i in (k + 1):n) {
+      L[i, k] <- U[i, k] / U[k, k]
+      U[i, ]  <- U[i, ] - L[i, k] * U[k, ]
+    }
+  }
+  list(P = P, L = L, U = U, swaps = swap_count)
+}
+
+lu1 <- lu_pp(A)
+# zobacz koniecznie macierz permutacji po pivotingu:
+ lu1$P
+max(abs(lu1$P %*% A - lu1$L %*% lu1$U))
+\end{lstlisting}
+
+
+Wykonaj zadanie 2 i 3 dla
+\begin{lstlisting}
+set.seed(1)
+A <- matrix(runif(5 * 5, 0, 5), nrow = 5)
+
+b <- runif(nrow(A))
+#rozwiązanie Ax=b z pivoting program poniżej
+x<-lu_solve (lu1,b)
+#rozwiązanie Ax=b  bezpivoting program poniżej
+x<-lu_solve (lu0_full,b) 
+#gdzie dopakowaliśmy lu0 do 
+# lu0_full <- list(P = diag(1, nrow(A)), L = lu0$L, U = lu0$U, swaps = 0)
+# dla lu0 P macierz identycznościowa nie stosowaliśmy pivoting
+\end{lstlisting}
+
+
+\subsection*{Szkielet kodu (R)}
+
+\begin{lstlisting}
+# Rozwiązywanie Ax = b na bazie LU dla  lu1 
+
+
+
+lu_solve <- function(lu, b) {
+  P <- lu$P; L <- lu$L; U <- lu$U
+  B <- as.matrix(b)
+  Pb <- P %*% B
+  n <- nrow(L); nrhs <- ncol(Pb)
+
+  # forward: L y = Pb (jedynki na przekątnej L)
+  Y <- matrix(0, n, nrhs)
+  for (i in 1:n) {
+    if (i > 1) Y[i, ] <- Pb[i, ] - L[i,1:(i-1),drop=FALSE] %*% Y[1:(i-1),,drop=FALSE]
+    else       Y[i, ] <- Pb[i, ]
+  }
+
+  # backward: U x = y
+  X <- matrix(0, n, nrhs)
+  for (i in n:1) {
+    if (i < n) X[i, ] <- (Y[i, ] - U[i,(i+1):n,drop=FALSE] %*% X[(i+1):n,,drop=FALSE]) / U[i,i]
+    else       X[i, ] <- Y[i, ] / U[i,i]
+  }
+  if (is.vector(b)) drop(X) else X
+}
+
+# Residuum względne
+rel_residual <- function(A, x, b) {
+  norm(A %*% x - b, "2") / (norm(A, "2") * norm(x, "2") + .Machine$double.eps)
+}
+
+# Współczynnik wzrostu
+growth_factor <- function(A, U) max(abs(U)) / max(abs(A))
+
+# Wyznacznik z LU
+lu_det <- function(lu) {
+  sign <- if ((lu$swaps %% 2) == 0) 1 else -1
+  sign * prod(diag(lu$U))
+}
+\end{lstlisting}
+
+
+
+\section*{Kącik angielski}
+\begin{itemize}[label=$\diamond$]
+\item $LU$ decomposition --- rozkład $LU$.
+\item \emph{Pivot} --- element główny.
+\item \emph{Partial pivoting} --- częściowe pivotowanie.
+\item \emph{Complete pivoting} --- pełne pivotowanie.
+\item \emph{Growth factor} --- współczynnik wzrostu.
+\item \emph{RHS} --- Right-Hand Side, prawa strona.
+\item \emph{Fill-in} --- zapełnianie (macierze rzadkie).
+\end{itemize}
+
+\section*{Krótka bibliografia (pod problemy otwarte)}
+\begin{enumerate}[label={[\arabic*]}]
+\item \textbf{Higham, N. J.} \emph{Accuracy and Stability of Numerical Algorithms}, 2nd ed., SIAM, 2002.
+\item \textbf{Golub, G. H., Van Loan, C. F.} \emph{Matrix Computations}, 4th ed., JHU Press, 2013.
+\item \textbf{Trefethen, L. N., Bau, D.} \emph{Numerical Linear Algebra}, SIAM, 1997.
+\item \textbf{Demmel, J.} \emph{Applied Numerical Linear Algebra}, SIAM, 1997.
+\item \textbf{Duff, I. S., Erisman, A. M., Reid, J. K.} \emph{Direct Methods for Sparse Matrices}, Oxford, 1986.
+\item \textbf{Davis, T. A.} \emph{Direct Methods for Sparse Linear Systems}, SIAM, 2006.
+\item \textbf{Wilkinson, J. H.} \emph{Rounding Errors in Algebraic Processes}, Prentice-Hall, 1963.
+\end{enumerate}
+
+\paragraph{Uwaga dydaktyczna.}
+Najpierw zrozumienie mechaniki (kody powyżej), potem porównania z \texttt{solve(A,b)} i \texttt{Matrix::lu}.
+W macierzach rzadkich kluczowy jest dobór permutacji minimalizujących fill-in.
+
+\end{document}

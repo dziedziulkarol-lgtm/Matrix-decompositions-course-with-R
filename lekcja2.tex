@@ -1,0 +1,119 @@
+\documentclass[12pt,a4paper]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage{amsmath,amssymb}
+\usepackage{geometry}
+\geometry{margin=2.5cm}
+
+\begin{document}
+
+\begin{center}
+\Large \textbf{Lekcja 2: Pseudoodwrotność i nowe prowokacje}
+\end{center}
+
+\section*{1. Wprowadzenie}
+Na poprzedniej lekcji poznaliśmy sprzeczny układ równań i zauważyliśmy, że 
+z jego rozwiązań cząstkowych powstaje trójkąt (convex polytope). 
+Rozważaliśmy różne sposoby definiowania „środka” tego zbioru.
+
+Dziś przechodzimy do \textbf{pseudoodwrotności} (Moore--Penrose inverse).
+
+\section*{2. Pseudoodwrotność}
+Dla macierzy $A\in \mathbb{R}^{m\times n}$ pseudoodwrotność $A^+$ 
+jest zdefiniowana jako macierz $n\times m$ spełniająca cztery warunki Penrosea:
+\[
+AA^+A=A,\qquad A^+AA^+=A^+,\qquad (AA^+)^\top=AA^+,\qquad (A^+A)^\top=A^+A.
+\]
+
+\textbf{Własności:}
+\begin{itemize}
+    \item Jeśli $A$ jest odwracalna, to $A^+=A^{-1}$.
+    \item Jeśli $A$ jest prostokątna, to $x=A^+b$ jest rozwiązaniem \emph{najmniejszych kwadratów} o minimalnej normie.
+    \item Obliczeniowo: $A^+$ wyznaczamy z rozkładu SVD.
+\end{itemize}
+
+\subsection*{2a. Definicja metody najmniejszych kwadratów}
+Dany jest układ równań
+\[
+A x \approx b, \quad A\in \mathbb{R}^{m\times n},\; b\in\mathbb{R}^m.
+\]
+Układ może być sprzeczny, czyli brak dokładnego $x$ spełniającego $Ax=b$.
+
+\medskip
+\noindent
+\textbf{Definicja.} Rozwiązaniem \emph{najmniejszych kwadratów} nazywamy wektor
+\[
+x^\star = \arg\min_{x\in\mathbb{R}^n} \|Ax-b\|_2^2.
+\]
+
+\medskip
+\noindent
+\textbf{Warunek normalny.} Punkt $x^\star$ spełnia układ równań
+\[
+A^\top A x^\star = A^\top b.
+\]
+
+\medskip
+\noindent
+\textbf{Interpretacja geometryczna.} Rozwiązanie najmniejszych kwadratów $x^\star$ jest takie, że $Ax^\star$ to \emph{rzut ortogonalny} wektora $b$ na przestrzeń kolumn macierzy $A$.
+
+---
+
+\section*{3. Powrót do przykładu}
+Dla macierzy
+\[
+A=\begin{bmatrix}2 & 1\\ 1 & -1\\ 1 & 1\end{bmatrix},\quad
+b=\begin{bmatrix}5\\1\\2\end{bmatrix}
+\]
+otrzymujemy
+\[
+x^\star=(A^\top A)^{-1}A^\top b=\left(\tfrac{27}{14},\,\tfrac{5}{7}\right).
+\]
+Punkt ten leży wewnątrz trójkąta i można go interpretować jako „ważony środek” rozwiązań cząstkowych.
+
+\section*{4. Zadania do pracy z AI}
+Każdy student prowadzi rozmowę z ChatGPT i zapisuje ją w pliku tekstowym.
+
+\subsection*{Zadanie 1. Układ niedookreślony}
+Rozważ układ
+\[
+x+y=2,\quad 2x+2y=4.
+\]
+\begin{itemize}
+    \item Dlaczego układ ma nieskończenie wiele rozwiązań?
+    \item Jak pseudoodwrotność wybiera jedno z nich?
+    \item Jaki sens ma rozwiązanie minimalnej normy?
+\end{itemize}
+
+
+
+\subsection*{Zadanie 2. Projekcje}
+Dla macierzy
+\[
+A=\begin{bmatrix}2 & 1\\ 1 & -1\\ 1 & 1\end{bmatrix},\quad
+b=\begin{bmatrix}5\\1\\2\end{bmatrix}
+\]
+Pokaż, że $AA^+$ jest macierzą projekcji ortogonalnej na obraz $A$.
+\begin{itemize}
+    \item Jaką interpretację ma $x^\star=A^+b$?
+    \item Jak wygląda rzut punktu $b$ na przestrzeń kolumn $A$?
+\end{itemize}
+
+\subsection*{Zadanie 3. Zmiana normy}
+Dla macierzy
+\[
+A=\begin{bmatrix}2 & 1\\ 1 & -1\\ 1 & 1\end{bmatrix},\quad
+b=\begin{bmatrix}5\\1\\2\end{bmatrix}
+\]
+Zamiast minimalizować $\|Ax-b\|_2$, rozważ
+\[
+\min_x \|Ax-b\|_1.
+\]
+\begin{itemize}
+    \item Jak zmienia się rozwiązanie?
+    \item Czy pseudoodwrotność działa?
+    \item Jakie metody są potrzebne?
+\end{itemize}
+
+\end{document}
