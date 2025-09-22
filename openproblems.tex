@@ -1,0 +1,116 @@
+% !TEX program = pdflatex
+\documentclass[11pt,a4paper]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+%\let\lll\undefined
+%\usepackage[polish]{babel}
+%\usepackage{polski}
+\usepackage{lmodern}
+\usepackage{amsmath,amssymb,amsthm,mathtools}
+\usepackage{geometry}
+\usepackage{microtype}
+\usepackage{enumitem}
+\usepackage{xcolor}
+\usepackage{hyperref}
+\hypersetup{colorlinks=true, linkcolor=blue!50!black, urlcolor=blue!50!black, citecolor=blue!50!black}
+\geometry{margin=2.6cm}
+
+% Theorem-like environments
+\theoremstyle{definition}
+\newtheorem{openproblem}{Problem otwarty}
+\newtheorem*{remark}{Uwaga}
+
+% Handy macros
+\DeclareMathOperator{\rank}{rank}
+\DeclareMathOperator{\srank}{srank}
+\DeclareMathOperator{\diag}{diag}
+\DeclareMathOperator{\tr}{tr}
+\DeclareMathOperator{\spec}{spec}
+\newcommand{\RR}{\mathbb{R}}
+\newcommand{\CC}{\mathbb{C}}
+\newcommand{\NN}{\mathbb{N}}
+
+\title{Lekcja 5. Otwarte problemy związane z macierzami\\\large szkic do dyskusji ze studentami (stan na sierpień 2025)}
+\author{Zebrane i skomentowane przez prowadzących}
+\date{}
+
+\let\lll\undefined
+\usepackage[polish]{babel}
+\begin{document}
+\maketitle
+
+\begin{abstract}
+Celem tej notatki jest zebranie kilku klasycznych i współczesnych problemów otwartych, w których macierze odgrywają rolę główną. Każdy wpis zawiera \emph{krótkie sformułowanie}, \emph{dlaczego to ważne}, \emph{przykład}, oraz \emph{wskazówki do lektury startowej}. Na końcu dodajemy propozycje mini–projektów dla studentów.\footnote{Status niektórych problemów szybko ewoluuje; przed głębszym użyciem zalecamy sprawdzenie aktualnego stanu literatury.}
+\end{abstract}
+
+\tableofcontents
+\bigskip
+
+\section{Spektra i problemy odwrotne}
+
+\begin{openproblem}[Nonnegative Inverse Eigenvalue Problem (NIEP)]\label{prob:NIEP}
+\textbf{Sformułowanie.} Scharakteryzować zbiory liczb zespolonych, które są widmem pewnej macierzy \emph{nieujemnej}. W szczególności pełna charakterystyka dla przypadków rzeczywistych/symetrycznych pozostaje otwarta w ogólności.
+
+\textbf{Przykład.} Macierz
+\[
+A = \begin{bmatrix} 0.5 & 0.5 \\ 0.5 & 0.5 \end{bmatrix}
+\]
+ma wartości własne \(1,0\) i jest nieujemna. Pytanie: dla jakich zestawów liczb można zbudować podobne macierze?
+
+\textbf{Dlaczego to ważne?} Połączenia z teorią Perrona–Frobeniusa, modelowaniem sieci i dynamiką populacji; prowadzi do subtelnych ograniczeń kombinatorycznych.
+
+\textbf{Lektura startowa.} Klasyczne przeglądy NIEP oraz nowsze wyniki dla małych wymiarów i klas specjalnych (symetryczne, dwustosunkowe, itp.).
+\end{openproblem}
+
+\section{Rozkłady niskiego rzędu i selekcja kolumn (SVD, CUR, RRQR)}
+
+\begin{openproblem}[Dobór kolumn/wierszy o gwarancjach względnego błędu]\label{prob:CSSP}
+\textbf{Sformułowanie.} W \emph{CSSP/CUR} znaleźć minimalną liczbę kolumn/wierszy (w funkcji \(k,\varepsilon\)), które deterministycznie dają aproksymację rzędu \(k\) o błędzie \((1+\varepsilon)\) względem SVD, przy \emph{ostrych stałych} i \emph{czasie bliskim liniowemu}.
+
+\textbf{Przykład.} Weźmy macierz obrazów pikselowych \(A\in\RR^{100\times 100}\). Zamiast obliczać pełne SVD, wybieramy \(k=10\) kolumn (np. odpowiadających wybranym pikselom–kolumnom). CUR daje aproksymację, w której \(A\approx CUR\) z zachowaniem interpretacji „kolumn jako cech rzeczywistych”.
+
+\textbf{Dlaczego to ważne?} Most między teorią a praktyką: interpretowalne składowe (kolumny) zamiast wektorów własnych; bezpośrednie zastosowania w CUR.
+
+\textbf{Lektura startowa.} Klasyczne prace o CSSP (Deshpande–Vempala; Boutsidis–Mahoney–Drineas), nowsze algorytmy losowe i deterministyczne.
+\end{openproblem}
+
+\section{Struktury specjalne i stożki macierzowe}
+
+\begin{openproblem}[Hipoteza o macierzach Hadamarda]\label{prob:Hadamard}
+\textbf{Sformułowanie.} Czy dla każdego \(n\equiv 0\ (\mathrm{mod}\ 4)\) istnieje macierz Hadamarda rzędu \(n\)? Problem otwarty od ponad wieku.
+
+\textbf{Przykład.} Dla \(n=4\) macierz Hadamarda to np.
+\[
+H_4 = \begin{bmatrix}
+  1 &  1 &  1 &  1 \\
+  1 & -1 &  1 & -1 \\
+  1 &  1 & -1 & -1 \\
+  1 & -1 & -1 &  1
+\end{bmatrix}.
+\]
+Dla \(n=8\) znane są konstrukcje rekurencyjne (iloczyn Kroneckera macierzy \(H_2\) z \(H_4\)).
+
+\textbf{Dlaczego to ważne?} Projektowanie eksperymentów, kody korekcyjne, teoria grafów i konstrukcje kombinatoryczne. Obecnie znane są konstrukcje dla wielu rzędów, ale pełna odpowiedź pozostaje nieznana.
+
+\textbf{Lektura startowa.}
+\begin{itemize}
+  \item K. J. Horadam, \emph{Hadamard Matrices and Their Applications}, Princeton University Press (2007).
+  \item M. Hall, \emph{Combinatorial Theory}, rozdziały o macierzach Hadamarda.
+  \item Survey: J. Seberry, M. Yamada, \emph{Hadamard matrices, sequences, and block designs} (w: Contemporary Design Theory, 1992).
+\end{itemize}
+
+\textbf{Status.} Udowodniono istnienie dla wielu klas rzędów (np. potęgi 2, iloczyny pewnych rodzin liczb), ale ogólny przypadek pozostaje otwarty.
+\end{openproblem}
+
+% --- reszta sekcji ---
+
+\section*{Mini–projekty dla studentów}
+\begin{enumerate}[label=\textbf{P\arabic*}., leftmargin=8mm]
+  \item \textbf{Eksperymenty z CSSP/CUR.} Porównaj losowe, dźwigniowe i deterministyczne wybory kolumn na danych rzeczywistych; zmierz błąd względem SVD i czas działania.
+  \item \textbf{Osobliwość \(\pm1\).} Zaimplementuj testy osobliwości dla losowych macierzy Bernoulliego do rozmiarów \(n\approx 200\); spróbuj wykrywać typowe przyczyny osobliwości.
+  \item \textbf{Sztywność w praktyce.} Dla różnych jawnych macierzy (Toeplitz, Vandermonde) szukaj heurystycznie niewielkich zmian obniżających rangę; raportuj zależności rozmiarowe.
+  \item \textbf{Hadamardy i projektowanie.} Zbierz znane konstrukcje; wygeneruj małe przykłady i przetestuj własności ortogonalności numerycznie.
+  \item \textbf{NIEP w małych wymiarach.} Spróbuj (symbolicznie/numerycznie) budować macierze nieujemne o zadanym prostym widmie; sformułuj hipotezy.
+\end{enumerate}
+
+\end{document}
