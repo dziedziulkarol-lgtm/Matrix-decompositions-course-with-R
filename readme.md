@@ -31,9 +31,24 @@ The materials are designed both for **mathematics students** and for students of
 
 ## 📂 Repository Structure
 
-
----
-
+Matrix-decompositions-course-with-R/
+│
+├── lectures/
+│   ├── polish/
+│   │
+│   └── english/
+│       ├── 01_intro/
+│       ├── 02_classical/
+│       ├── 03_low_rank/
+│       ├── 04_psd/
+│       ├── 05_open_problems/
+│       └── ...
+│
+├── R_codes/             # R scripts for computations & demos
+│
+├── Stańczyk.jpg          # example image used in SVD/NMF demos
+│
+└── README.md
 ## 🛠️ Requirements
 - [R](https://cran.r-project.org/) (≥ 4.0)  
 - Recommended: [RStudio](https://posit.co/download/rstudio-desktop/)  
