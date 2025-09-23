@@ -9,7 +9,7 @@ A <- as.matrix(read.csv("C:/Users/Karol Dziedziul/Dropbox/matrix/lecture5/img_sm
 stopifnot(nrow(A) == 128, ncol(A) == 128)
 
 # Display the original image (flip rows for correct orientation)
-image(apply(A, 2, rev), axes = FALSE, col = gray.colors(256), asp = 1)
+image(t(apply(A, 2, rev)), axes = FALSE, col = gray.colors(256), asp = 1)
 
 # Target ranks
 ks <- c(4, 8, 16, 32)
@@ -23,7 +23,7 @@ svd_k <- function(M, k) {
 par(mfrow = c(1, length(ks)), mar = c(1, 1, 2, 1))
 for (k in ks) {
   A_svd <- svd_k(A, k)
-  image(A_svd[nrow(A_svd):1, ], axes = FALSE, col = gray.colors(256), asp = 1,
+  image(t(A_svd[nrow(A_svd):1, ]), axes = FALSE, col = gray.colors(256), asp = 1,
         main = paste("SVD: k =", k))
 }
 
@@ -37,7 +37,7 @@ for (k in ks) {
   W <- basis(fit)
   H <- coef(fit)
   Ak <- W %*% H
-  image(apply(Ak, 2, rev), axes = FALSE, col = gray.colors(256), asp = 1,
+  image(t(apply(Ak, 2, rev)), axes = FALSE, col = gray.colors(256), asp = 1,
         main = paste("NMF: k =", k))
 }
 
@@ -57,6 +57,6 @@ cur <- function(M, k, c = 4 * k, r = 4 * k) {
 par(mfrow = c(1, length(ks)), mar = c(1, 1, 2, 1))
 for (k in ks) {
   A_cur <- cur(A, k)
-  image(apply(A_cur, 2, rev), axes = FALSE, col = gray.colors(256), asp = 1,
+  image(t(apply(A_cur, 2, rev)), axes = FALSE, col = gray.colors(256), asp = 1,
         main = paste("CUR: k =", k))
 }
