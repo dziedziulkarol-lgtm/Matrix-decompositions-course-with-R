@@ -34,13 +34,19 @@ The materials are designed both for **mathematics students** and for students of
 ```text
 Matrix-decompositions-course-with-R/
 |
-+-- lectures/
-| +-- polish/
-| -- english/ | +-- 01_intro/ | +-- 02_classical/ | +-- 03_low_rank/ | +-- 04_psd/ | +-- 05_open_problems/ | -- ...
+|-- lectures/
+|  |-- polish/
+|  |-- english/ 
+|      |-- 01_intro
+|      |-- 02_classical 
+|      |-- 03_low_rank
+|      |-- 04_psd
+|      |-- 05_open_problems
 |
-+-- R_codes/
-+-- Stańczyk.jpg
--- README.md \``
+|-- R_codes/readme_codes.md
+|-- Stańczyk.jpg
+|-- intro.teaser.pdf/tex
+|-- README.md \``
 
 
 ## 🛠️ Requirements
