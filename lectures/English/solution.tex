@@ -1,0 +1,159 @@
+\documentclass[12pt,a4paper]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage{amsmath,amssymb,mathtools,bm}
+\usepackage{enumitem}
+\usepackage{hyperref}
+
+\title{Lecture 1 — Solutions via Moore–Penrose and Tikhonov}
+\date{}
+\begin{document}
+\maketitle
+
+\section*{Problem statement (from the class exercise)}
+We study the (overdetermined) system
+\[
+\begin{cases}
+2x + y = 5,\\
+x - y = 1,\\
+x + y = 2,
+\end{cases}
+\qquad
+\text{i.e. } A x \approx b,\;
+A=\begin{bmatrix}2&1\\[2pt]1&-1\\[2pt]1&1\end{bmatrix},\;
+b=\begin{bmatrix}5\\1\\2\end{bmatrix}.
+\]
+The system is \emph{inconsistent}; we seek principled approximations.
+
+\section{Moore–Penrose least–squares solution}
+\subsection*{Normal–equations view}
+For full column rank ($\mathrm{rank}(A)=2$), the least–squares (LS) solution is
+\[
+x_{\rm LS} \;=\; (A^\top A)^{-1}A^\top b \;=\; A^{+} b .
+\]
+For our $A,b$:
+\[
+A^\top A = \begin{bmatrix}6&2\\[2pt]2&3\end{bmatrix},\quad
+A^\top b = \begin{bmatrix}13\\[2pt]6\end{bmatrix},\quad
+x_{\rm LS}=\begin{bmatrix}\tfrac{27}{14}\\[2pt]\tfrac{5}{7}\end{bmatrix}
+\approx \begin{bmatrix}1.928571\\[2pt]0.714286\end{bmatrix}.
+\]
+Residual $r=b-Ax_{\rm LS}=\bigl[\tfrac{1}{14},\, -\tfrac{5}{7},\, \tfrac{1}{2}\bigr]^\top$ and satisfies
+$A^\top r=0$ (orthogonality to $\mathrm{col}(A)$).
+
+\subsection*{Geometric meaning}
+$x_{\rm LS}$ is the unique vector whose image $Ax_{\rm LS}$ is the orthogonal projection of $b$ onto the column space $\mathrm{col}(A)$. Equivalently,
+$r=b-Ax_{\rm LS}\perp \mathrm{col}(A)$.
+
+\subsection*{SVD view (numerically stable)}
+Let $A=U\Sigma V^\top$ (thin SVD, $\Sigma=\mathrm{diag}(\sigma_1,\sigma_2)$ with $\sigma_1\ge\sigma_2>0$). Then
+\[
+x_{\rm LS}=A^{+}b \;=\; V\Sigma^{+}U^\top b
+\quad\text{with}\quad
+\Sigma^{+}=\mathrm{diag}\bigl(\sigma_1^{-1},\sigma_2^{-1}\bigr).
+\]
+This expresses LS as filtered components along right singular vectors; small singular values (ill-conditioning) amplify noise.
+
+\section{Tikhonov (ridge) regularization}
+To control variance / ill-conditioning, solve
+\[
+x_\lambda \;=\; \arg\min_{x}\ \|Ax-b\|_2^2 + \lambda\|x\|_2^2
+\quad(\lambda>0),
+\]
+with closed form
+\[
+x_\lambda \;=\; (A^\top A + \lambda I)^{-1}A^\top b .
+\]
+For our $A,b$:
+\[
+A^\top A + \lambda I =
+\begin{bmatrix}6+\lambda & 2\\[2pt] 2 & 3+\lambda\end{bmatrix},\quad
+x_\lambda
+=\frac{1}{(6+\lambda)(3+\lambda)-4}
+\begin{bmatrix}3+\lambda & -2\\[2pt] -2 & 6+\lambda\end{bmatrix}
+\begin{bmatrix}13\\[2pt]6\end{bmatrix}.
+\]
+\textbf{Limits.} $x_\lambda\to x_{\rm LS}$ as $\lambda\downarrow 0$; and $x_\lambda\to 0$ as $\lambda\uparrow\infty$ (with standard $\ell_2$ penalty).\\[4pt]
+\textbf{SVD filter factors.} With $A=U\Sigma V^\top$,
+\[
+x_\lambda \;=\; \sum_{i=1}^{2} \frac{\sigma_i}{\sigma_i^2+\lambda}\,\langle b, u_i\rangle\, v_i,
+\]
+so each singular direction is damped by $\sigma_i/(\sigma_i^2+\lambda)$; small $\sigma_i$ are strongly suppressed.
+This is closely related to truncated SVD (TSVD), which \emph{zeros out} directions with tiny $\sigma_i$.
+
+\section{Other geometric possibilities (beyond $\ell_2$)}
+\begin{itemize}[leftmargin=1.4em]
+\item \textbf{Weighted LS:} $\min_x \|W(Ax-b)\|_2^2$ to privilege certain equations (e.g.\ measurement reliabilities).
+\item \textbf{$\ell_1$ (LAD) fit:} $\min_x \|Ax-b\|_1$ (robust to outliers; gives a different projection geometry via polytope distance).
+\item \textbf{$\ell_\infty$ (Chebyshev) fit:} $\min_x \|Ax-b\|_\infty$ (minimax worst–case residual; intersection of strips around the lines).
+\item \textbf{Constrained LS:} add box/convex constraints (e.g.\ nonnegativity) to encode prior knowledge.
+\item \textbf{Geometric “multi-line” compromise:} each equation is a line; LS chooses the point where the vector of signed distances is orthogonal to $\mathrm{col}(A)$; $\ell_1$ chooses a point minimizing the sum of absolute distances; $\ell_\infty$ minimizes the maximal distance.
+\end{itemize}
+
+\section{Numerical summary for the class system}
+\begin{align*}
+x_{\rm LS} &= \begin{bmatrix}\tfrac{27}{14}\\[2pt]\tfrac{5}{7}\end{bmatrix}
+\approx \begin{bmatrix}1.928571\\[2pt]0.714286\end{bmatrix},\qquad
+r=b-Ax_{\rm LS}=\begin{bmatrix}\tfrac{1}{14}\\[2pt]-\tfrac{5}{7}\\[2pt]\tfrac{1}{2}\end{bmatrix},\quad
+A^\top r=\bm{0}.\\[6pt]
+x_\lambda &= (A^\top A+\lambda I)^{-1}A^\top b
+\;\;\text{(closed form above)}.
+\end{align*}
+Example values:
+\[
+\lambda=0.1:\;
+x_{0.1}\approx\begin{bmatrix}1.920\\[2pt]0.709\end{bmatrix},\qquad
+\lambda=1:\;
+x_{1}\approx\begin{bmatrix}1.875\\[2pt]0.688\end{bmatrix}.
+\]
+As $\lambda$ grows, the fit relaxes and the norm of $x_\lambda$ shrinks.
+
+\section{Computation in \textsf{R}}
+\subsection*{Data}
+\begin{verbatim}
+A <- matrix(c(2,1,
+              1,-1,
+              1,1), nrow=3, byrow=TRUE)
+b <- c(5,1,2)
+\end{verbatim}
+
+\subsection*{Moore–Penrose via normal equations}
+\begin{verbatim}
+x_LS <- solve(t(A) %*% A, t(A) %*% b)
+# or, with SVD (more stable):
+sv  <- svd(A)
+x_LS_svd <- sv$v %*% (t(sv$u) %*% b / sv$d)
+\end{verbatim}
+
+\subsection*{Moore–Penrose via pseudoinverse}
+\begin{verbatim}
+# install.packages("MASS")
+library(MASS)
+x_MP <- ginv(A) %*% b
+\end{verbatim}
+
+\subsection*{Tikhonov (ridge) regularization}
+\begin{verbatim}
+ridge <- function(lambda) {
+  solve(t(A) %*% A + lambda * diag(ncol(A)), t(A) %*% b)
+}
+x_lam_01 <- ridge(0.1)
+x_lam_1  <- ridge(1.0)
+\end{verbatim}
+
+\subsection*{Diagnostics}
+\begin{verbatim}
+r   <- b - A %*% x_LS
+t(A) %*% r      # should be (numerically) c(0,0)
+norm(r, type="2")
+\end{verbatim}
+
+\section{When to use which?}
+\begin{itemize}[leftmargin=1.4em]
+\item Use \textbf{LS / pseudoinverse} when the model is well-conditioned and you want the best $\ell_2$ fit.
+\item Use \textbf{Tikhonov} when columns of $A$ are nearly dependent or data are noisy; tune $\lambda$ to trade bias for variance.
+\item Consider \textbf{$\ell_1$} or \textbf{weighted} fits for outliers / heterogeneous noise; \textbf{constraints} to reflect domain knowledge.
+\end{itemize}
+
+\end{document}
